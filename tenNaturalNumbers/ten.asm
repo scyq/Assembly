@@ -1,17 +1,18 @@
 DATAS SEGMENT
-    MINUS DB 46 DUP(0)  ; 保存差值 排列组合 C 10 2 = 45
-    ANS DB 10 DUP(0)   ; 保存答案
     FLAG DB 0			;num转asc的标识
     HINT DB 'Ten natural number with different difference:$' ;提示
-    ZERO DB 0
 DATAS ENDS
 
+STACKS SEGMENT
+
+STACKS ENDS
+
 CODES SEGMENT
-    ASSUME CS:CODES,DS:DATAS
+    ASSUME CS:CODES,DS:DATAS,SS:STACKS
 START:
     MOV AX,DATAS
     MOV DS,AX
-
+	
 	LEA DX,HINT ;给出提示
 	MOV AH,09
 	INT 21H
@@ -19,53 +20,32 @@ START:
 	MOV AH,02
 	INT 21H
 	
-    MOV SI,0	;差值数组下标
-    MOV DI,46	;答案数组下标       
-    MOV AX,0	;ANS[0] = 0
-    MOV BX,1    ;存放当前的数字
+	
+	MOV AX,0	
+	CALL NUM	;输出
+	MOV AX,1
+	MOV CX,8	;循环次数
+	PUSH AX		;压栈保护
+	PUSH CX
+	CALL NUM
+	POP CX
+	POP AX
+	
+MAIN:
+	ADD AX,AX	;加上到0，是目前的最大差值
+	INC AX		;再加1，这个差不可能出现过
+	PUSH AX
+	PUSH CX
+	CALL NUM
+	POP CX
+	POP AX
+LOOP MAIN
+   
+EXIT: ;程序出口
+    MOV AH,4CH
+    INT 21H
     
-    MOV [DI],AX
-    JMP NUM
-
-MAIN_LOOP:
-	MOV DX,BX	;记忆当前的数字
-	MOV AX,[DI]	;检索最新的可行数
-	SUB BX,AX	;得到与最新可行数的差
-	MOV AX,BX	;记忆当前的差
-
-CHECK:
-	CMP BX,[SI]	;比较当前差值和差值表中的值
-	JE FAIL		;相等肯定不行	
-	MOV CX,0	
-	CMP CX,[SI] ;[SI]为0说明这个位置没有差
-	JE SUCCESS	;这个数可以
-	JNE PLUS	;不相等，说明有数，但是和BX不相等SI++
-	
-PLUS:			;增加SI
-	INC SI
-	JMP CHECK
-	
-SUCCESS:
-	INC DI		;答案+1
-	MOV [DI],DX	;记录答案
-	MOV [SI],AX	;更新差值表  
-	
-	MOV	AX,0	;还原SI指针
-	MOV SI,AX
-	MOV BX,[DI] ;将BX更新为可行数
-	MOV AX,BX	;将要输出的存在AX里
-	INC BX		;可行数+1，作为下一次的起点
-	JMP	NUM
-
-FAIL:
-	MOV BX,DX	;把原来那个数还回来
-	INC BX		;+1
-	MOV AX,0	;还原SI
-	MOV SI,AX
-	JMP MAIN_LOOP
-
-
-; Num转ASC码
+; Num转ASC码子程序
 NUM:         
     ;待转换数放置于AX寄存器中     
     mov bx,10000		;初始数位权值为10000
@@ -111,17 +91,12 @@ space:					;输出一个空格
 	mov dl,al
 	mov ah,2
 	int 21h
-	
-JUMPBACK:
-	MOV FLAG,0			;还原
-	CMP DI,55
-	JB MAIN_LOOP
-	JE EXIT
-  
-    
-EXIT: ;程序出口
-    MOV AH,4CH
-    INT 21H
+	MOV FLAG,0			;还原，这样输出不会有前导0
+RET
+
 CODES ENDS
     END START
+
+
+
 
