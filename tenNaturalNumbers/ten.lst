@@ -1,0 +1,182 @@
+Microsoft (R) Macro Assembler Version 6.11		    03/24/20 21:09:14
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+ 0000  002E [			    MINUS DB 46 DUP(0)  ; 保存差值 排列组合 C 10 2 = 45
+        00
+       ]
+ 002E  000A [			    ANS DB 10 DUP(0)   ; 保存答案
+        00
+       ]
+ 0038 00			    FLAG DB 0			;num转asc的标识
+ 0039 54 65 6E 20 6E 61		    HINT DB 'Ten natural number with different difference:$' ;提示
+       74 75 72 61 6C 20
+       6E 75 6D 62 65 72
+       20 77 69 74 68 20
+       64 69 66 66 65 72
+       65 6E 74 20 64 69
+       66 66 65 72 65 6E
+       63 65 3A 24
+ 0067 00			    ZERO DB 0
+ 0068				DATAS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+
+ 0005  8D 16 0039 R			LEA DX,HINT ;给出提示
+ 0009  B4 09				MOV AH,09
+ 000B  CD 21				INT 21H
+ 000D  BA 000A				MOV DX,10	;换行
+ 0010  B4 02				MOV AH,02
+ 0012  CD 21				INT 21H
+					
+ 0014  BE 0000			    MOV SI,0	;差值数组下标
+ 0017  BF 002E			    MOV DI,46	;答案数组下标       
+ 001A  B8 0000			    MOV AX,0	;ANS[0] = 0
+ 001D  BB 0001			    MOV BX,1    ;存放当前的数字
+				    
+ 0020  89 05			    MOV [DI],AX
+ 0022  EB 33			    JMP NUM
+
+ 0024				MAIN_LOOP:
+ 0024  8B D3				MOV DX,BX	;记忆当前的数字
+ 0026  8B 05				MOV AX,[DI]	;检索最新的可行数
+ 0028  2B D8				SUB BX,AX	;得到与最新可行数的差
+ 002A  8B C3				MOV AX,BX	;记忆当前的差
+
+ 002C				CHECK:
+ 002C  3B 1C				CMP BX,[SI]	;比较当前差值和差值表中的值
+ 002E  74 1D				JE FAIL		;相等肯定不行	
+ 0030  B9 0000				MOV CX,0	
+ 0033  3B 0C				CMP CX,[SI] ;[SI]为0说明这个位置没有差
+ 0035  74 05				JE SUCCESS	;这个数可以
+ 0037  75 00				JNE PLUS	;不相等，说明有数，但是和BX不相等SI++
+					
+ 0039				PLUS:			;增加SI
+ 0039  46				INC SI
+ 003A  EB F0				JMP CHECK
+					
+ 003C				SUCCESS:
+ 003C  47				INC DI		;答案+1
+ 003D  89 15				MOV [DI],DX	;记录答案
+ 003F  89 04				MOV [SI],AX	;更新差值表  
+					
+ 0041  B8 0000				MOV	AX,0	;还原SI指针
+ 0044  8B F0				MOV SI,AX
+ 0046  8B 1D				MOV BX,[DI] ;将BX更新为可行数
+ 0048  8B C3				MOV AX,BX	;将要输出的存在AX里
+ 004A  43				INC BX		;可行数+1，作为下一次的起点
+ 004B  EB 0A				JMP	NUM
+
+ 004D				FAIL:
+ 004D  8B DA				MOV BX,DX	;把原来那个数还回来
+ 004F  43				INC BX		;+1
+ 0050  B8 0000				MOV AX,0	;还原SI
+ 0053  8B F0				MOV SI,AX
+ 0055  EB CD				JMP MAIN_LOOP
+
+
+				; Num转ASC码
+ 0057				NUM:         
+				    ;待转换数放置于AX寄存器中     
+ 0057  BB 2710			    mov bx,10000		;初始数位权值为10000
+				    
+ 005A  33 D2			cov:xor dx,dx			;将dx:ax中的数值除以权值
+ 005C  F7 F3				div bx
+ 005E  8B CA				mov cx,dx			;余数备份到CX寄存器中
+					
+ 0060  80 3E 0038 R 00			cmp flag,0			;检测是否曾遇到非0商值
+ 0065  75 05				jne nor1			;如遇到过，则不管商是否为0都输出显示
+ 0067  83 F8 00				cmp ax,0			;如未遇到过，则检测商是否为0
+ 006A  74 0E				je cont				;为0则不输出显示
+					
+ 006C				nor1:
+ 006C  8A D0				mov dl,al			;将商转换为ascii码输出显示
+ 006E  80 C2 30				add dl,30h
+ 0071  B4 02				mov ah,2
+ 0073  CD 21				int 21h
+					
+ 0075  C6 06 0038 R 01			mov flag,1			;曾遇到非0商，则将标志置1
+					
+ 007A				cont:
+ 007A  83 FB 0A				cmp bx,10			;检测权值是否已经修改到十位了
+ 007D  74 0F				je outer			;如果相等，则完成最后的个位数输出显示
+					
+ 007F  33 D2				xor dx,dx			;将数位权值除以10
+ 0081  8B C3				mov ax,bx
+ 0083  BB 000A				mov bx,10
+ 0086  F7 F3			    div bx
+ 0088  8B D8			    mov bx,ax
+				    
+ 008A  8B C1			    mov ax,cx			;将备份的余数送入AX
+ 008C  EB CC			    jmp cov    			;继续循环
+				   
+ 008E				outer:
+ 008E  8A D1				mov dl,cl			;最后的个位数变为ascii码输出显示
+ 0090  80 C2 30				add dl,30h
+ 0093  B4 02				mov ah,2
+ 0095  CD 21				int 21h  
+
+ 0097				space:					;输出一个空格
+ 0097  B8 0020				mov ax,32 			;空格
+ 009A  8A D0				mov dl,al
+ 009C  B4 02				mov ah,2
+ 009E  CD 21				int 21h
+					
+ 00A0				JUMPBACK:
+ 00A0  C6 06 0038 R 00			MOV FLAG,0			;还原
+ 00A5  83 FF 37				CMP DI,55
+ 00A8  73 03 E9 FF77			JB MAIN_LOOP
+ 00AD  74 00				JE EXIT
+				  
+				    
+ 00AF				EXIT: ;程序出口
+ 00AF  B4 4C			    MOV AH,4CH
+ 00B1  CD 21			    INT 21H
+ 00B3				CODES ENDS
+				    END START
+
+Microsoft (R) Macro Assembler Version 6.11		    03/24/20 21:09:14
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 00B3	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0068	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+ANS  . . . . . . . . . . . . . .	Byte	 002E	  DATAS	
+CHECK  . . . . . . . . . . . . .	L Near	 002C	  CODES	
+EXIT . . . . . . . . . . . . . .	L Near	 00AF	  CODES	
+FAIL . . . . . . . . . . . . . .	L Near	 004D	  CODES	
+FLAG . . . . . . . . . . . . . .	Byte	 0038	  DATAS	
+HINT . . . . . . . . . . . . . .	Byte	 0039	  DATAS	
+JUMPBACK . . . . . . . . . . . .	L Near	 00A0	  CODES	
+MAIN_LOOP  . . . . . . . . . . .	L Near	 0024	  CODES	
+MINUS  . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+NUM  . . . . . . . . . . . . . .	L Near	 0057	  CODES	
+PLUS . . . . . . . . . . . . . .	L Near	 0039	  CODES	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+SUCCESS  . . . . . . . . . . . .	L Near	 003C	  CODES	
+ZERO . . . . . . . . . . . . . .	Byte	 0067	  DATAS	
+cont . . . . . . . . . . . . . .	L Near	 007A	  CODES	
+cov  . . . . . . . . . . . . . .	L Near	 005A	  CODES	
+nor1 . . . . . . . . . . . . . .	L Near	 006C	  CODES	
+outer  . . . . . . . . . . . . .	L Near	 008E	  CODES	
+space  . . . . . . . . . . . . .	L Near	 0097	  CODES	
+
+	   0 Warnings
+	   0 Errors
