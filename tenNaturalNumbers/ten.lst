@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.11		    03/25/20 00:08:35
+Microsoft (R) Macro Assembler Version 6.11		    03/26/20 10:26:02
 tempfile.asm						     Page 1 - 1
 
 
@@ -102,7 +102,7 @@ tempfile.asm						     Page 1 - 1
  007A  8A D0				mov dl,al
  007C  B4 02				mov ah,2
  007E  CD 21				int 21h
- 0080  C6 06 0000 R 00			MOV FLAG,0			;还原
+ 0080  C6 06 0000 R 00			MOV FLAG,0			;还原，这样输出不会有前导0
  0085  C3			RET
 
  0086				CODES ENDS
@@ -111,7 +111,8 @@ tempfile.asm						     Page 1 - 1
 
 
 
-Microsoft (R) Macro Assembler Version 6.11		    03/25/20 00:08:35
+
+Microsoft (R) Macro Assembler Version 6.11		    03/26/20 10:26:02
 tempfile.asm						     Symbols 2 - 1
 
 

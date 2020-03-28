@@ -1,0 +1,225 @@
+Microsoft (R) Macro Assembler Version 6.11		    03/28/20 00:14:11
+tempfile.asm						     Page 1 - 1
+
+
+				NUM MACRO
+				    ;待转换数放置于AX寄存器中     
+				    mov bx,10000		;初始数位权值为10000
+				    
+				cov:xor dx,dx			;将dx:ax中的数值除以权值
+					div bx
+					mov cx,dx			;余数备份到CX寄存器中
+					
+					cmp flag,0			;检测是否曾遇到非0商值
+					jne nor1			;如遇到过，则不管商是否为0都输出显示
+					cmp ax,0			;如未遇到过，则检测商是否为0
+					je cont				;为0则不输出显示
+					
+				nor1:
+					mov dl,al			;将商转换为ascii码输出显示
+					add dl,30h
+					mov ah,2
+					int 21h
+					
+					mov flag,1			;曾遇到非0商，则将标志置1
+					
+				cont:
+					cmp bx,10			;检测权值是否已经修改到十位了
+					je outer			;如果相等，则完成最后的个位数输出显示
+					
+					xor dx,dx			;将数位权值除以10
+					mov ax,bx
+					mov bx,10
+				    div bx
+				    mov bx,ax
+				    
+				    mov ax,cx			;将备份的余数送入AX
+				    jmp cov    			;继续循环
+				   
+				outer:
+					mov dl,cl			;最后的个位数变为ascii码输出显示
+					add dl,30h
+					mov ah,2
+					int 21h  
+
+				space:					;输出一个空格
+					mov ax,32 			;空格
+					mov dl,al
+					mov ah,2
+					int 21h
+					MOV FLAG,0			;还原，这样输出不会有前导0
+				ENDM
+
+				;judge it is
+				JUDGE MACRO	
+					;idiv quotient in AL, remainder in AH (dw operate)
+					;number to judge is in BX			
+					MOV DL,64H			;dec 100 = hex 64
+					MOV AX,BX			;divident is in ax
+					DIV DL				;ab in AL, cd in AH
+					PUSH BX
+					ADD AL,AH			;AL now saves ab + cd
+					MOV AH,0			;AX now Saves ab + cd
+					MUL AX				;square (ab + cd), result in ax
+					POP BX				;BX is still the Number
+					CMP AX,BX
+					JE SUCCESS
+					JNE ENDJ
+				SUCCESS:
+					MOV AX,BX			;ready to output
+					PUSH BX				;protect
+					PUSH CX
+					NUM				
+					POP CX
+					POP BX
+					JMP ENDJ
+					
+				ENDJ:
+					INC BX				;BX++
+					ENDM
+
+
+ 0000				DATAS SEGMENT
+ 0000 54 68 65 20 61 6E			HINT DB	'The answers that satisfy abcd = (ab+cd)^2 are:$'
+       73 77 65 72 73 20
+       74 68 61 74 20 73
+       61 74 69 73 66 79
+       20 61 62 63 64 20
+       3D 20 28 61 62 2B
+       63 64 29 5E 32 20
+       61 72 65 3A 24
+ 002F 00				FLAG DB 0			;num转asc的标识
+ 0030				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    
+ 0005  BB 03E8			    MOV BX,1000			;starter
+ 0008  B9 2328			    MOV CX,9000			;1000~9999
+				    
+ 000B  8D 16 0000 R		    LEA DX,HINT			;output hint
+ 000F  B4 09			    MOV AH,09
+ 0011  CD 21			    INT 21H
+				    
+ 0013  B2 0A			    MOV DL,10			;enter a line
+ 0015  B4 02			    MOV AH,02			
+ 0017  CD 21			   	INT 21H				
+
+ 0019				MAIN:
+					JUDGE			
+ 0019  B2 64		     1		MOV DL,64H			;dec 100 = hex 64
+ 001B  8B C3		     1		MOV AX,BX			;divident is in ax
+ 001D  F6 F2		     1		DIV DL				;ab in AL, cd in AH
+ 001F  53		     1		PUSH BX
+ 0020  02 C4		     1		ADD AL,AH			;AL now saves ab + cd
+ 0022  B4 00		     1		MOV AH,0			;AX now Saves ab + cd
+ 0024  F7 E0		     1		MUL AX				;square (ab + cd), result in ax
+ 0026  5B		     1		POP BX				;BX is still the Number
+ 0027  3B C3		     1		CMP AX,BX
+ 0029  74 02		     1		JE SUCCESS
+ 002B  75 56		     1		JNE ENDJ
+ 002D			     1	SUCCESS:
+ 002D  8B C3		     1		MOV AX,BX			;ready to output
+ 002F  53		     1		PUSH BX				;protect
+ 0030  51		     1		PUSH CX
+ 0031  BB 2710		     2	    mov bx,10000		;初始数位权值为10000
+ 0034  33 D2		     2	cov:xor dx,dx			;将dx:ax中的数值除以权值
+ 0036  F7 F3		     2		div bx
+ 0038  8B CA		     2		mov cx,dx			;余数备份到CX寄存器中
+ 003A  80 3E 002F R 00	     2		cmp flag,0			;检测是否曾遇到非0商值
+ 003F  75 05		     2		jne nor1			;如遇到过，则不管商是否为0都输出显示
+ 0041  83 F8 00		     2		cmp ax,0			;如未遇到过，则检测商是否为0
+ 0044  74 0E		     2		je cont				;为0则不输出显示
+ 0046			     2	nor1:
+ 0046  8A D0		     2		mov dl,al			;将商转换为ascii码输出显示
+ 0048  80 C2 30		     2		add dl,30h
+ 004B  B4 02		     2		mov ah,2
+ 004D  CD 21		     2		int 21h
+ 004F  C6 06 002F R 01	     2		mov flag,1			;曾遇到非0商，则将标志置1
+ 0054			     2	cont:
+ 0054  83 FB 0A		     2		cmp bx,10			;检测权值是否已经修改到十位了
+ 0057  74 0F		     2		je outer			;如果相等，则完成最后的个位数输出显示
+ 0059  33 D2		     2		xor dx,dx			;将数位权值除以10
+ 005B  8B C3		     2		mov ax,bx
+ 005D  BB 000A		     2		mov bx,10
+ 0060  F7 F3		     2	    div bx
+ 0062  8B D8		     2	    mov bx,ax
+ 0064  8B C1		     2	    mov ax,cx			;将备份的余数送入AX
+ 0066  EB CC		     2	    jmp cov    			;继续循环
+ 0068			     2	outer:
+ 0068  8A D1		     2		mov dl,cl			;最后的个位数变为ascii码输出显示
+ 006A  80 C2 30		     2		add dl,30h
+ 006D  B4 02		     2		mov ah,2
+ 006F  CD 21		     2		int 21h  
+ 0071			     2	space:					;输出一个空格
+ 0071  B8 0020		     2		mov ax,32 			;空格
+ 0074  8A D0		     2		mov dl,al
+ 0076  B4 02		     2		mov ah,2
+ 0078  CD 21		     2		int 21h
+ 007A  C6 06 002F R 00	     2		MOV FLAG,0			;还原，这样输出不会有前导0
+ 007F  59		     1		POP CX
+ 0080  5B		     1		POP BX
+ 0081  EB 00		     1		JMP ENDJ
+ 0083			     1	ENDJ:
+ 0083  43		     1		INC BX				;BX++
+ 0084  E2 93			LOOP MAIN		
+				    
+				    
+ 0086				EXIT:
+ 0086  B4 4C			    MOV AH,4CH
+ 0088  CD 21			    INT 21H
+ 008A				CODES ENDS
+				    END START
+
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    03/28/20 00:14:11
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+JUDGE  . . . . . . . . . . . . .	Proc
+NUM  . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 008A	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0030	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+ENDJ . . . . . . . . . . . . . .	L Near	 0083	  CODES	
+EXIT . . . . . . . . . . . . . .	L Near	 0086	  CODES	
+FLAG . . . . . . . . . . . . . .	Byte	 002F	  DATAS	
+HINT . . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+MAIN . . . . . . . . . . . . . .	L Near	 0019	  CODES	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+SUCCESS  . . . . . . . . . . . .	L Near	 002D	  CODES	
+cont . . . . . . . . . . . . . .	L Near	 0054	  CODES	
+cov  . . . . . . . . . . . . . .	L Near	 0034	  CODES	
+nor1 . . . . . . . . . . . . . .	L Near	 0046	  CODES	
+outer  . . . . . . . . . . . . .	L Near	 0068	  CODES	
+space  . . . . . . . . . . . . .	L Near	 0071	  CODES	
+
+	   0 Warnings
+	   0 Errors
