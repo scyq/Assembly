@@ -1,0 +1,273 @@
+Microsoft (R) Macro Assembler Version 6.11		    04/05/20 01:40:40
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+ 0000 00			    flag db 0 			;flag of numToAsc procedure		
+ 0001 00			    prime db 0			;flag of prime judge
+ 0002 01			    judgeNumber db 1	;the number waits to be judged, ++first so start from 1
+ 0003 0000			    sum dw 0			;the sum of prime
+ 0005 00			    count db 0			;the counts
+ 0006 54 68 65 20 70 72		    startHint db 'The prime number below 100 are:$'
+       69 6D 65 20 6E 75
+       6D 62 65 72 20 62
+       65 6C 6F 77 20 31
+       30 30 20 61 72 65
+       3A 24
+ 0026 54 68 65 20 73 75		    sumHint db 'The sum of them is:$'
+       6D 20 6F 66 20 74
+       68 65 6D 20 69 73
+       3A 24
+ 003A 54 68 65 20 63 6F		    countHint db 'The count of them is:$'
+       75 6E 74 20 6F 66
+       20 74 68 65 6D 20
+       69 73 3A 24
+ 0050				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    
+ 0005  8D 16 0006 R		   	lea dx,startHint
+ 0009  B4 09			   	mov ah,09
+ 000B  CD 21			   	int 21h
+				   	
+				   	   	
+ 000D				main:
+ 000D  B2 0A				mov dl,10
+ 000F  B4 02			   	mov ah,02				;enter a line
+ 0011  CD 21			   	int 21h
+ 0013  B9 000A				mov cx,10				;a line contains 10 number
+ 0016				line:				
+ 0016  8A 1E 0002 R			mov bl,judgeNumber		;judgeNumber++
+ 001A  FE C3				inc bl
+ 001C  80 FB 64				cmp bl,100				;compare judgeNumber to 100
+ 001F  73 39				jae endloop
+ 0021  88 1E 0002 R			mov judgeNumber,bl
+ 0025  80 FB 02				cmp bl,2
+ 0028  74 0C				je output
+ 002A  E8 00C3				call primeJudge		
+ 002D  8A 1E 0001 R			mov bl,prime
+ 0031  80 FB 01				cmp bl,1			
+ 0034  75 E0				jne line				;if not a prime
+					
+ 0036				output:
+					; if it is prime
+ 0036  A0 0002 R			mov al,judgeNumber
+ 0039  B4 00				mov ah,0				;ax = judgeNumber
+ 003B  8B 1E 0003 R			mov bx,sum
+ 003F  03 D8				add bx,ax				;low ++
+ 0041  89 1E 0003 R			mov sum,bx	
+ 0045  33 DB				xor bx,bx
+ 0047  8A 1E 0005 R			mov bl,count			
+ 004B  FE C3				inc bl
+ 004D  88 1E 0005 R			mov count,bl			;count++
+ 0051  51				push cx
+ 0052  E8 0041				call numToAsc
+					;call pause				;pause
+ 0055  59				pop cx
+					
+ 0056  E2 BE			loop line
+ 0058  EB B3				jmp main				;a line end
+
+
+ 005A				endloop:
+					
+					;if end
+ 005A  B2 0A				mov dl,10
+ 005C  B4 02			   	mov ah,02				;enter a line
+ 005E  CD 21			   	int 21h
+					
+ 0060  8D 16 003A R			lea dx,countHint		;output hint
+ 0064  B4 09			   	mov ah,09
+ 0066  CD 21			   	int 21h
+				   	
+ 0068  B2 0A			   	mov dl,10
+ 006A  B4 02			   	mov ah,02				;enter a line
+ 006C  CD 21			   	int 21h
+				   	
+ 006E  33 C0				xor ax,ax
+ 0070  A0 0005 R			mov al,count
+ 0073  E8 0020				call numToAsc
+					
+ 0076  B2 0A				mov dl,10
+ 0078  B4 02			   	mov ah,02				;enter a line
+ 007A  CD 21			   	int 21h
+					
+ 007C  8D 16 0026 R			lea dx,sumHint			;output sum
+ 0080  B4 09			   	mov ah,09
+ 0082  CD 21			   	int 21h
+				   	
+ 0084  B2 0A			   	mov dl,10
+ 0086  B4 02			   	mov ah,02				;enter a line
+ 0088  CD 21			   	int 21h
+					
+ 008A  33 C0				xor ax,ax
+ 008C  A1 0003 R			mov ax,sum
+ 008F  E8 0004				call numToAsc
+				   
+				    
+ 0092  B4 4C			    MOV AH,4CH
+ 0094  CD 21			    INT 21H
+				    
+ 0096				numToAsc proc 
+				    ;待转换数放置于AX寄存器中     
+ 0096  BB 2710			    mov bx,10000		;初始数位权值为10000
+				    
+ 0099  33 D2			cov:xor dx,dx			;将dx:ax中的数值除以权值
+ 009B  F7 F3				div bx
+ 009D  8B CA				mov cx,dx			;余数备份到CX寄存器中
+					
+ 009F  80 3E 0000 R 00			cmp flag,0			;检测是否曾遇到非0商值
+ 00A4  75 05				jne nor1			;如遇到过，则不管商是否为0都输出显示
+ 00A6  83 F8 00				cmp ax,0			;如未遇到过，则检测商是否为0
+ 00A9  74 0E				je cont				;为0则不输出显示
+					
+ 00AB				nor1:
+ 00AB  8A D0				mov dl,al			;将商转换为ascii码输出显示
+ 00AD  80 C2 30				add dl,30h
+ 00B0  B4 02				mov ah,2
+ 00B2  CD 21				int 21h
+					
+ 00B4  C6 06 0000 R 01			mov flag,1			;曾遇到非0商，则将标志置1
+					
+ 00B9				cont:
+ 00B9  83 FB 0A				cmp bx,10			;检测权值是否已经修改到十位了
+ 00BC  74 0F				je outer			;如果相等，则完成最后的个位数输出显示
+					
+ 00BE  33 D2				xor dx,dx			;将数位权值除以10
+ 00C0  8B C3				mov ax,bx
+ 00C2  BB 000A				mov bx,10
+ 00C5  F7 F3			    div bx
+ 00C7  8B D8			    mov bx,ax
+				    
+ 00C9  8B C1			    mov ax,cx			;将备份的余数送入AX
+ 00CB  EB CC			    jmp cov    			;继续循环
+				   
+ 00CD				outer:
+ 00CD  8A D1				mov dl,cl			;最后的个位数变为ascii码输出显示
+ 00CF  80 C2 30				add dl,30h
+ 00D2  B4 02				mov ah,2
+ 00D4  CD 21				int 21h  
+
+ 00D6				space:					;输出一个空格
+ 00D6  B8 0020				mov ax,32 			;空格
+ 00D9  8A D0				mov dl,al
+ 00DB  B4 02				mov ah,2
+ 00DD  CD 21				int 21h
+ 00DF  C6 06 0000 R 00			mov flag,0			;还原，这样输出不会有前导0
+ 00E4  C3				ret
+ 00E5				numToAsc endp    
+				    
+ 00E5				pause proc
+ 00E5  B4 86				mov ah,86h			;bios pause function, unit is us
+					;pause time saves dw in cx(high) and dx(low)
+ 00E7  B9 0019				mov cx,19h
+ 00EA  BA 9848				mov dx,9848h			;0x199848 I dont know how long
+ 00ED  CD 15				int 15h
+ 00EF  C3				ret
+ 00F0				pause endp
+
+ 00F0				primeJudge proc
+ 00F0  C6 06 0001 R 00			mov prime,0				;initialize
+ 00F5  A0 0002				mov al,ds:[2]			;ax = judgeNumber
+ 00F8  B4 00				mov ah,0				;high is zero
+ 00FA  3C 03				cmp al,3
+ 00FC  74 24				je yes					;3 is special
+ 00FE  B2 02				mov dl,2				
+ 0100  F6 F2				div dl					;if the number is even above 2 it's not
+ 0102  80 FC 00				cmp ah,0				;compare remainder to 0
+ 0105  74 22				je no
+ 0107  FE C2				inc dl					;if it is odd then start from 3
+ 0109  A0 0002				mov al,ds:[2]			;restart 
+ 010C  B4 00				mov ah,0
+ 010E				judge:
+ 010E  F6 F2				div dl
+ 0110  80 FC 00				cmp ah,0				;compare remainder to 0
+ 0113  74 14				je no
+ 0115  A0 0002				mov al,ds:[2]			;restart
+ 0118  B4 00				mov ah,0
+ 011A  FE C2				inc dl					
+ 011C  3A 16 0002 R			cmp dl,judgeNumber		;stop loop
+ 0120  72 EC				jb judge
+
+ 0122				yes:
+ 0122  C6 06 0001 R 01			mov prime,1				;never jump to no
+ 0127  EB 07				jmp quit
+					
+ 0129				no:
+ 0129  C6 06 0001 R 00			mov prime,0				;it's not prime
+ 012E  EB 00				jmp quit
+				    
+ 0130				quit:
+ 0130  C3				ret
+ 0131				primeJudge endp
+				    
+				    
+ 0131				CODES ENDS
+				    END START
+				   
+
+
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    04/05/20 01:40:40
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 0131	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0050	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+numToAsc . . . . . . . . . . . .	P Near	 0096	  CODES	Length= 004F Public
+  cov  . . . . . . . . . . . . .	L Near	 0099	  CODES	
+  nor1 . . . . . . . . . . . . .	L Near	 00AB	  CODES	
+  cont . . . . . . . . . . . . .	L Near	 00B9	  CODES	
+  outer  . . . . . . . . . . . .	L Near	 00CD	  CODES	
+  space  . . . . . . . . . . . .	L Near	 00D6	  CODES	
+pause  . . . . . . . . . . . . .	P Near	 00E5	  CODES	Length= 000B Public
+primeJudge . . . . . . . . . . .	P Near	 00F0	  CODES	Length= 0041 Public
+  judge  . . . . . . . . . . . .	L Near	 010E	  CODES	
+  yes  . . . . . . . . . . . . .	L Near	 0122	  CODES	
+  no . . . . . . . . . . . . . .	L Near	 0129	  CODES	
+  quit . . . . . . . . . . . . .	L Near	 0130	  CODES	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+countHint  . . . . . . . . . . .	Byte	 003A	  DATAS	
+count  . . . . . . . . . . . . .	Byte	 0005	  DATAS	
+endloop  . . . . . . . . . . . .	L Near	 005A	  CODES	
+flag . . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+judgeNumber  . . . . . . . . . .	Byte	 0002	  DATAS	
+line . . . . . . . . . . . . . .	L Near	 0016	  CODES	
+main . . . . . . . . . . . . . .	L Near	 000D	  CODES	
+output . . . . . . . . . . . . .	L Near	 0036	  CODES	
+prime  . . . . . . . . . . . . .	Byte	 0001	  DATAS	
+startHint  . . . . . . . . . . .	Byte	 0006	  DATAS	
+sumHint  . . . . . . . . . . . .	Byte	 0026	  DATAS	
+sum  . . . . . . . . . . . . . .	Word	 0003	  DATAS	
+
+	   0 Warnings
+	   0 Errors
