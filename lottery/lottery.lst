@@ -1,0 +1,208 @@
+Microsoft (R) Macro Assembler Version 6.11		    04/12/20 15:44:40
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+ 0000 54 68 65 20 4C 75		     hint db 'The Lucky Number is: $'
+       63 6B 79 20 4E 75
+       6D 62 65 72 20 69
+       73 3A 20 24
+ 0016 00			     flag db 0 							;the flag of proc
+				     
+ 0017				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    ;此处输入代码段代码
+				    
+ 0005  B4 09			    mov ah,9
+ 0007  B0 20			    mov al,' '			; just set background
+ 0009  B3 4A			    mov bl,01001010b	; color configure
+ 000B  B7 00			    mov bh,0			; page 0
+ 000D  CD 10			    int 10h
+				    
+ 000F  8D 16 0000 R		    lea dx,hint			; output hint
+ 0013  B4 09			   	mov ah,9
+ 0015  CD 21			   	int 21h
+				    
+ 0017				main:
+					
+ 0017  33 C0				xor ax,ax
+ 0019  B4 01				mov ah,01h			; keyborad status
+ 001B  CD 16				int 16h				; scan but do not interrupt
+ 001D  74 08				jz noinput
+ 001F  B4 00				mov ah,00h			
+ 0021  CD 16				int 16h
+ 0023  3C 20				cmp al,32			; space = 32d
+ 0025  74 19				je bye
+
+ 0027				noinput:
+ 0027  B4 02			 	mov ah,2			; set position
+ 0029  B7 00				mov bh,0			; page 0
+ 002B  B6 01				mov dh,1			; line number
+ 002D  B2 00				mov dl,0			; column number
+ 002F  CD 10				int 10h
+					
+ 0031				once:
+ 0031  B9 000A				mov cx,10
+					; mloop output 10 random numbers
+ 0034				mloop:
+ 0034  51				push cx
+ 0035  E8 0076				call random
+ 0038  E8 0024				call numToAsc
+ 003B  59				pop cx
+ 003C  E2 F6			loop mloop
+ 003E  EB D7				jmp main
+
+					
+ 0040				bye:
+ 0040  B4 02				mov ah,2			; set position
+ 0042  B7 00				mov bh,0			; page 0
+ 0044  B6 01				mov dh,1			; line number
+ 0046  B2 00				mov dl,0			; column number
+ 0048  CD 10				int 10h
+
+ 004A				last:
+ 004A  B9 000A				mov cx,10
+ 004D				lloop:
+ 004D  51				push cx
+ 004E  E8 005D				call random
+ 0051  E8 000B				call numToAsc
+ 0054  59				pop cx
+ 0055  E2 F6			loop lloop
+					
+ 0057  B4 03				mov ah,03h			; interrupt
+ 0059  CD 21				int 21h 
+
+ 005B  B4 4C			    MOV AH,4CH
+ 005D  CD 21			    INT 21H
+				    
+ 005F				numToAsc proc 
+				    ;待转换数放置于AX寄存器中     
+ 005F  BB 2710			    mov bx,10000		;初始数位权值为10000
+				    
+ 0062  33 D2			cov:xor dx,dx			;将dx:ax中的数值除以权值
+ 0064  F7 F3				div bx
+ 0066  8B CA				mov cx,dx			;余数备份到CX寄存器中
+					
+ 0068  80 3E 0016 R 00			cmp flag,0			;检测是否曾遇到非0商值
+ 006D  75 05				jne nor1			;如遇到过，则不管商是否为0都输出显示
+ 006F  83 F8 00				cmp ax,0			;如未遇到过，则检测商是否为0
+ 0072  74 0E				je cont				;为0则不输出显示
+					
+ 0074				nor1:
+ 0074  8A D0				mov dl,al			;将商转换为ascii码输出显示
+ 0076  80 C2 30				add dl,30h
+ 0079  B4 02				mov ah,2
+ 007B  CD 21				int 21h
+					
+ 007D  C6 06 0016 R 01			mov flag,1			;曾遇到非0商，则将标志置1
+					
+ 0082				cont:
+ 0082  83 FB 0A				cmp bx,10			;检测权值是否已经修改到十位了
+ 0085  74 0F				je outer			;如果相等，则完成最后的个位数输出显示
+					
+ 0087  33 D2				xor dx,dx			;将数位权值除以10
+ 0089  8B C3				mov ax,bx
+ 008B  BB 000A				mov bx,10
+ 008E  F7 F3			    div bx
+ 0090  8B D8			    mov bx,ax
+				    
+ 0092  8B C1			    mov ax,cx			;将备份的余数送入AX
+ 0094  EB CC			    jmp cov    			;继续循环
+				   
+ 0096				outer:
+ 0096  8A D1				mov dl,cl			;最后的个位数变为ascii码输出显示
+ 0098  80 C2 30				add dl,30h
+ 009B  B4 02				mov ah,2
+ 009D  CD 21				int 21h  
+
+ 009F				space:					;输出一个空格
+ 009F  B8 0020				mov ax,32 			;空格
+ 00A2  8A D0				mov dl,al
+ 00A4  B4 02				mov ah,2
+ 00A6  CD 21				int 21h
+ 00A8  C6 06 0016 R 00			mov flag,0			;还原，这样输出不会有前导0
+ 00AD  C3				ret
+ 00AE				numToAsc endp        
+
+ 00AE				random proc		
+					;41h I/O port is system timer
+					;frequency is 1.193MHZ
+ 00AE  BA 0041				mov dx,41h			; now we get a count	
+ 00B1  EC				in al,dx
+ 00B2  B4 00				mov ah,0			; ax is the random			
+ 00B4  B2 0A				mov dl,10
+ 00B6  F6 F2				div dl				; mod 10
+ 00B8  8A C4				mov al,ah
+ 00BA  B4 00				mov ah,0			; random number in ax
+ 00BC  C3				ret
+ 00BD				random endp
+
+ 00BD				pause proc
+ 00BD  B4 86				mov ah,86h			; bios pause function, unit is us
+					; pause time saves dw in cx(high) and dx(low)
+ 00BF  B9 0019				mov cx,19h
+ 00C2  BA 9848				mov dx,9848h		; 0x199848 I dont know how long
+ 00C5  CD 15				int 15h
+ 00C7  C3				ret
+ 00C8				pause endp
+				    
+ 00C8				CODES ENDS
+				    END START
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    04/12/20 15:44:40
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 00C8	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0017	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+numToAsc . . . . . . . . . . . .	P Near	 005F	  CODES	Length= 004F Public
+  cov  . . . . . . . . . . . . .	L Near	 0062	  CODES	
+  nor1 . . . . . . . . . . . . .	L Near	 0074	  CODES	
+  cont . . . . . . . . . . . . .	L Near	 0082	  CODES	
+  outer  . . . . . . . . . . . .	L Near	 0096	  CODES	
+  space  . . . . . . . . . . . .	L Near	 009F	  CODES	
+pause  . . . . . . . . . . . . .	P Near	 00BD	  CODES	Length= 000B Public
+random . . . . . . . . . . . . .	P Near	 00AE	  CODES	Length= 000F Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+bye  . . . . . . . . . . . . . .	L Near	 0040	  CODES	
+flag . . . . . . . . . . . . . .	Byte	 0016	  DATAS	
+hint . . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+last . . . . . . . . . . . . . .	L Near	 004A	  CODES	
+lloop  . . . . . . . . . . . . .	L Near	 004D	  CODES	
+main . . . . . . . . . . . . . .	L Near	 0017	  CODES	
+mloop  . . . . . . . . . . . . .	L Near	 0034	  CODES	
+noinput  . . . . . . . . . . . .	L Near	 0027	  CODES	
+once . . . . . . . . . . . . . .	L Near	 0031	  CODES	
+
+	   0 Warnings
+	   0 Errors
