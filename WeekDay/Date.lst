@@ -1,0 +1,696 @@
+Microsoft (R) Macro Assembler Version 6.11		    04/19/20 21:02:27
+tempfile.asm						     Page 1 - 1
+
+
+				enterline macro
+					mov dl,10
+					mov ah,02
+					int 21h
+				endm
+
+ 0000				DATAS SEGMENT
+ 0000 50 6C 65 61 73 65		    hintY db 'Please enter the Year:(1583 ~ 9999)$'
+       20 65 6E 74 65 72
+       20 74 68 65 20 59
+       65 61 72 3A 28 31
+       35 38 33 20 7E 20
+       39 39 39 39 29 24
+ 0024 50 6C 65 61 73 65		    hintM db 'Please enter the Month:$'
+       20 65 6E 74 65 72
+       20 74 68 65 20 4D
+       6F 6E 74 68 3A 24
+ 003C 50 6C 65 61 73 65		    hintD db 'Please enter the Day:$'
+       20 65 6E 74 65 72
+       20 74 68 65 20 44
+       61 79 3A 24
+ 0052 44 61 74 65 20 64		    err db 'Date does not exist!$'
+       6F 65 73 20 6E 6F
+       74 20 65 78 69 73
+       74 21 24
+ 0067 57 72 6F 6E 67 20		    wrong db 'Wrong Input Syntax!$'
+       49 6E 70 75 74 20
+       53 79 6E 74 61 78
+       21 24
+ 007B 49 74 20 69 73 20		    Monday db 'It is Monday.$'
+       4D 6F 6E 64 61 79
+       2E 24
+ 0089 49 74 20 69 73 20		    Tuesday db 'It is Tuesday.$'
+       54 75 65 73 64 61
+       79 2E 24
+ 0098 49 74 20 69 73 20		    Wednesday db 'It is Wednesday.$'
+       57 65 64 6E 65 73
+       64 61 79 2E 24
+ 00A9 49 74 20 69 73 20		    Thursday db 'It is Thursday.$'
+       54 68 75 72 73 64
+       61 79 2E 24
+ 00B9 49 74 20 69 73 20		    Friday db 'It is Friday.$'
+       46 72 69 64 61 79
+       2E 24
+ 00C7 49 74 20 69 73 20		    Saturday db 'It is Saturday.$'
+       53 61 74 75 72 64
+       61 79 2E 24
+ 00D7 49 74 20 69 73 20		    Sunday db 'It is Sunday.$'
+       53 75 6E 64 61 79
+       2E 24
+ 00E5 00			    flag db 0
+ 00E6 0A 00			    buf db 10,?,10 dup(0)
+       000A [
+        00
+       ]
+ 00F2 0000			    year dw 0
+ 00F4 0000			    month dw 0
+ 00F6 0000			    day dw 0
+ 00F8 0000			    ans dw 0
+ 00FA				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    
+ 0005  B4 02				mov ah,2		; set position
+ 0007  B7 00				mov bh,0		; page 0
+ 0009  B6 00				mov dh,0		; line 0
+ 000B  B2 00				mov dl,0		; column 0
+ 000D  CD 10			    int 10h
+				    
+ 000F  8D 16 0000 R		    lea dx,hintY	
+ 0013  B4 09			    mov ah,09
+ 0015  CD 21			    int 21h
+				    
+				    enterline
+ 0017  B2 0A		     1		mov dl,10
+ 0019  B4 02		     1		mov ah,02
+ 001B  CD 21		     1		int 21h
+				    
+ 001D				inyear:
+ 001D  E8 0150			    call ascToNum
+ 0020  3D 270F			    cmp ax,9999
+ 0023  77 07			    ja wrongyear
+ 0025  3D 062F			    cmp ax,1583
+ 0028  72 02			    jb wrongyear
+ 002A  EB 10			    jmp rightyear
+ 002C				wrongyear:
+ 002C  8D 16 0067 R			lea dx,wrong
+ 0030  B4 09				mov ah,09
+ 0032  CD 21				int 21h
+					enterline
+ 0034  B2 0A		     1		mov dl,10
+ 0036  B4 02		     1		mov ah,02
+ 0038  CD 21		     1		int 21h
+ 003A  EB E1				jmp inyear
+					
+ 003C				rightyear:
+ 003C  8D 3E 00F2 R			lea di,year
+ 0040  89 05				mov [di],ax
+ 0042  E8 00DA			    call leapYear
+				    enterline
+ 0045  B2 0A		     1		mov dl,10
+ 0047  B4 02		     1		mov ah,02
+ 0049  CD 21		     1		int 21h
+				    
+ 004B  8D 16 0024 R		    lea dx,hintM
+ 004F  B4 09			    mov ah,09
+ 0051  CD 21			    int 21h
+				    
+				    enterline
+ 0053  B2 0A		     1		mov dl,10
+ 0055  B4 02		     1		mov ah,02
+ 0057  CD 21		     1		int 21h
+				    
+ 0059  E8 0114			    call ascToNum
+ 005C  E8 0171			    call checkMonth
+				    
+				    enterline
+ 005F  B2 0A		     1		mov dl,10
+ 0061  B4 02		     1		mov ah,02
+ 0063  CD 21		     1		int 21h
+				    
+ 0065  8D 16 003C R		    lea dx,hintD
+ 0069  B4 09			    mov ah,09
+ 006B  CD 21			    int 21h
+				    
+				    enterline
+ 006D  B2 0A		     1		mov dl,10
+ 006F  B4 02		     1		mov ah,02
+ 0071  CD 21		     1		int 21h
+				    
+ 0073  E8 00FA			    call ascToNum
+ 0076  E8 017D			    call checkDay
+				    
+				    enterline
+ 0079  B2 0A		     1		mov dl,10
+ 007B  B4 02		     1		mov ah,02
+ 007D  CD 21		     1		int 21h
+				    
+ 007F  E8 0241			    call cal
+				    
+ 0082  8D 3E 00F8 R		    lea di,ans
+ 0086  8B 05			    mov ax,[di]
+ 0088  83 F8 00			    cmp ax,0
+ 008B  74 1E			    je sun
+ 008D  83 F8 01			    cmp ax,1
+ 0090  74 29			    je mon
+ 0092  83 F8 02			    cmp ax,2
+ 0095  74 34			    je tue
+ 0097  83 F8 03			    cmp ax,3
+ 009A  74 3F			    je wed
+ 009C  83 F8 04			    cmp ax,4
+ 009F  74 4A			    je thur
+ 00A1  83 F8 05			    cmp ax,5
+ 00A4  74 55			    je fri
+ 00A6  83 F8 06			    cmp ax,6
+ 00A9  74 60			    je sat
+
+ 00AB				sun:
+ 00AB  8D 16 00D7 R			lea dx,Sunday
+ 00AF  B4 09				mov ah,09
+ 00B1  CD 21				int 21h
+					enterline
+ 00B3  B2 0A		     1		mov dl,10
+ 00B5  B4 02		     1		mov ah,02
+ 00B7  CD 21		     1		int 21h
+ 00B9  EB 60				jmp exit
+					
+ 00BB				mon:
+ 00BB  8D 16 007B R			lea dx,Monday
+ 00BF  B4 09				mov ah,09
+ 00C1  CD 21				int 21h
+					enterline
+ 00C3  B2 0A		     1		mov dl,10
+ 00C5  B4 02		     1		mov ah,02
+ 00C7  CD 21		     1		int 21h
+ 00C9  EB 50				jmp exit
+					
+ 00CB				tue:
+ 00CB  8D 16 0089 R			lea dx,Tuesday
+ 00CF  B4 09				mov ah,09
+ 00D1  CD 21				int 21h
+					enterline
+ 00D3  B2 0A		     1		mov dl,10
+ 00D5  B4 02		     1		mov ah,02
+ 00D7  CD 21		     1		int 21h
+ 00D9  EB 40				jmp exit
+					
+ 00DB				wed:
+ 00DB  8D 16 0098 R			lea dx,Wednesday
+ 00DF  B4 09				mov ah,09
+ 00E1  CD 21				int 21h
+					enterline
+ 00E3  B2 0A		     1		mov dl,10
+ 00E5  B4 02		     1		mov ah,02
+ 00E7  CD 21		     1		int 21h
+ 00E9  EB 30				jmp exit
+					
+ 00EB				thur:
+ 00EB  8D 16 00A9 R			lea dx,Thursday
+ 00EF  B4 09				mov ah,09
+ 00F1  CD 21				int 21h
+					enterline
+ 00F3  B2 0A		     1		mov dl,10
+ 00F5  B4 02		     1		mov ah,02
+ 00F7  CD 21		     1		int 21h
+ 00F9  EB 20				jmp exit
+
+ 00FB				fri:
+ 00FB  8D 16 00B9 R			lea dx,Friday
+ 00FF  B4 09				mov ah,09
+ 0101  CD 21				int 21h
+					enterline
+ 0103  B2 0A		     1		mov dl,10
+ 0105  B4 02		     1		mov ah,02
+ 0107  CD 21		     1		int 21h
+ 0109  EB 10				jmp exit
+					
+ 010B				sat:
+ 010B  8D 16 00C7 R			lea dx,Saturday
+ 010F  B4 09				mov ah,09
+ 0111  CD 21				int 21h
+					enterline
+ 0113  B2 0A		     1		mov dl,10
+ 0115  B4 02		     1		mov ah,02
+ 0117  CD 21		     1		int 21h
+ 0119  EB 00				jmp exit
+				    
+ 011B				exit:
+ 011B  B4 4C			    MOV AH,4CH
+ 011D  CD 21			    INT 21H
+				    
+				; judege whether it is leap year
+				; ax saves the year
+ 011F				leapYear proc			
+ 011F  8B D8				mov bx,ax		; bx saves the year
+ 0121  8D 3E 00F2 R			lea di,year
+ 0125  89 1D				mov [di],bx		; save the data
+
+				; y % 4 == 0 && y % 100 != 0
+ 0127				first:				
+ 0127  33 D2				xor dx,dx		; result is to big
+ 0129  B9 0004				mov cx,4
+ 012C  F7 F1				div cx
+					;remainder in dx
+ 012E  83 FA 00				cmp dx,0
+ 0131  75 10				jne second		; y % 4 != 0 -> second condition
+ 0133  8B C3				mov ax,bx
+ 0135  33 D2				xor dx,dx
+ 0137  B9 0064				mov cx,100
+ 013A  F7 F1				div cx			
+ 013C  83 FA 00				cmp dx,0		
+ 013F  74 02				je	second		; y % 100 == 0 -> second yes
+ 0141  75 1E				jne yes
+
+				; year % 400==0 && year % 3200 != 0
+ 0143				second:
+ 0143  33 D2				xor dx,dx		; prepare for division
+ 0145  8B C3				mov ax,bx		; dx(0000) || ax 
+ 0147  B9 0190				mov cx,400		
+ 014A  F7 F1				div cx
+					;remainder in dx
+ 014C  83 FA 00				cmp dx,0
+ 014F  75 17				jne no			; year % 400 != -> not leap year
+ 0151  33 D2				xor dx,dx
+ 0153  8B C3				mov ax,bx
+ 0155  B9 0C80				mov cx,3200
+ 0158  F7 F1				div cx
+ 015A  83 FA 00				cmp dx,0
+ 015D  74 09				je 	no			; year % 400 == 0 -> not leap year
+ 015F  75 00				jne yes
+					
+ 0161				yes:
+ 0161  C6 06 00E5 R 01			mov flag,1
+ 0166  EB 07				jmp e
+ 0168				no:
+ 0168  C6 06 00E5 R 00			mov flag,0
+ 016D  EB 00				jmp e
+
+ 016F				e:
+ 016F  C3				ret
+ 0170				leapYear endp	
+
+ 0170				ascToNum proc	
+ 0170				again:
+ 0170  8D 16 00E6 R			lea dx,buf		;从键盘接收输入数值放入buf缓冲区
+ 0174  B4 0A			    mov ah,10
+ 0176  CD 21			    int 21h
+				    
+ 0178  8A 0E 00E7 R		    mov cl,buf+1	;获取实际键入字符数，置于CX寄存器中
+ 017C  32 ED			    xor ch,ch
+				    
+ 017E  33 FF			    xor di,di		;累加器清0
+				    
+ 0180  33 D2			    xor dx,dx		;DX寄存器清0
+				    
+ 0182  BB 0001			    mov bx,1		;由于从个位数开始算起，因而将所乘权值设为1
+				    
+ 0185  8D 36 00E8 R		    lea si,buf+2	;将si指向接收到的第1个字符位置
+ 0189  03 F1			    add si,cx		;因为从个位算起，所以将si指向最后1个接收到的个位数
+ 018B  4E			    dec si
+				    
+ 018C				cov:
+ 018C  8A 04				mov al,[si]		;取出个位数给al
+ 018E  3C 30				cmp al,'0'		;边界检查：如果输入不是0-9的数字，就报错
+ 0190  72 2D				jb error
+ 0192  3C 39				cmp al,'9'
+ 0194  77 29				ja error
+
+ 0196  2C 30			    sub al,30h		;将al中的ascii码转为数字
+ 0198  32 E4			    xor ah,ah
+ 019A  F7 E3			    mul bx			;乘以所处数位的权值
+ 019C  83 FA 00			    cmp dx,0		;判断结果是否超出16位数范围，如超出则报错
+ 019F  75 1E			    jne error
+				    
+ 01A1  03 F8			    add di,ax		;将形成的数值放在累加器di中
+ 01A3  72 1A			    jc error		;如数值超过16位数范围报错
+				    
+				      
+ 01A5  8B C3			    mov ax,bx		;将BX中的数位权值乘以10
+ 01A7  BB 000A			    mov bx,10
+ 01AA  F7 E3			    mul bx
+ 01AC  83 FA 00			    cmp dx,0		;判断结果是否超出16位数范围，如超出则报错
+ 01AF  75 09			    jne error1 
+ 01B1  8B D8			    mov bx,ax
+				    
+ 01B3  4E			    dec si			;si指针减1，指向前一数位
+ 01B4  E2 D6			    loop cov    	;按CX中的字符个数计数循环
+				   
+ 01B6				suc:
+ 01B6  8B C7				mov ax,di		;将最终转换结果从di中放置到ax中
+ 01B8  EB 15				jmp stop
+
+ 01BA				error1:
+ 01BA  83 F9 01				cmp cx,1
+ 01BD  76 F7				jbe suc
+					
+ 01BF				error:				;给出错误提示
+ 01BF  8D 16 0067 R			lea dx,wrong
+ 01C3  B4 09			    mov ah,9
+ 01C5  CD 21			    int 21h
+				    
+				    enterline 
+ 01C7  B2 0A		     1		mov dl,10
+ 01C9  B4 02		     1		mov ah,02
+ 01CB  CD 21		     1		int 21h
+				    
+ 01CD  EB A1			    jmp again 		;如出错则返回起始点重新输入
+
+ 01CF				stop:   
+ 01CF  C3				ret
+ 01D0				ascToNum endp
+
+				; check whether month is right or not
+ 01D0				checkMonth proc
+
+ 01D0				cM:
+					; ax saves the month
+ 01D0  83 F8 01				cmp ax,1
+ 01D3  72 07				jb bad
+ 01D5  83 F8 0C				cmp ax,12
+ 01D8  77 02				ja bad
+ 01DA  EB 13				jmp good
+					
+ 01DC				bad:
+ 01DC  8D 16 0052 R			lea dx,err
+ 01E0  B4 09				mov ah,09
+ 01E2  CD 21				int 21h
+					enterline
+ 01E4  B2 0A		     1		mov dl,10
+ 01E6  B4 02		     1		mov ah,02
+ 01E8  CD 21		     1		int 21h
+					
+ 01EA  E8 FF83				call ascToNum	; proc will return to here
+ 01ED  EB E1				jmp cM			; check again
+
+ 01EF				good:
+ 01EF  8D 3E 00F4 R			lea di,month
+ 01F3  89 05				mov [di],ax		; save the data
+ 01F5  C3				ret
+ 01F6				checkMonth endp
+
+ 01F6				checkDay proc
+ 01F6				cD:
+					; ax saves the day
+ 01F6  83 F8 01				cmp ax,1		; no less than 1
+ 01F9  73 03 E9 00AA			jb nono
+					
+ 01FE  8D 3E 00F4 R			lea di,month
+ 0202  8B 1D				mov bx,[di]
+ 0204  83 FB 01				cmp bx,1
+ 0207  74 37				je Jan
+ 0209  83 FB 02				cmp bx,2
+ 020C  74 39				je Feb
+ 020E  83 FB 03				cmp bx,3
+ 0211  74 4F				je Mar
+ 0213  83 FB 04				cmp bx,4
+ 0216  74 51				je Apr
+ 0218  83 FB 05				cmp bx,5
+ 021B  74 53				je May
+ 021D  83 FB 06				cmp bx,6
+ 0220  74 55				je Jun
+ 0222  83 FB 07				cmp bx,7
+ 0225  74 57				je July
+ 0227  83 FB 08				cmp bx,8
+ 022A  74 59				je Aug
+ 022C  83 FB 09				cmp bx,9
+ 022F  74 5B				je Sep
+ 0231  83 FB 0A				cmp bx,10
+ 0234  74 5D				je Oct
+ 0236  83 FB 0B				cmp bx,11
+ 0239  74 5F				je Nov
+ 023B  83 FB 0C				cmp bx,12
+ 023E  74 61				je Decem
+					
+ 0240				Jan:
+ 0240  83 F8 1F				cmp ax,31		; no more than 31
+ 0243  77 63				ja nono
+ 0245  EB 75				jmp okok
+ 0247				Feb:
+ 0247  8D 3E 00E5 R			lea di,flag		; judge leap year or not
+ 024B  8B 1D				mov bx,[di]
+ 024D  83 FB 01				cmp bx,1
+ 0250  74 02				je leap
+ 0252  75 07				jne nleap
+ 0254				leap:
+ 0254  83 F8 1D				cmp ax,29		; leap year no more than 29
+ 0257  77 4F				ja nono
+ 0259  EB 61				jmp okok
+ 025B				nleap:
+ 025B  83 F8 1C				cmp ax,28
+ 025E  77 48				ja nono
+ 0260  EB 5A				jmp okok
+ 0262				Mar:
+ 0262  83 F8 1F				cmp ax,31		; no more than 31
+ 0265  77 41				ja nono
+ 0267  EB 53				jmp okok
+ 0269				Apr:
+ 0269  83 F8 1E				cmp ax,30		; no more than 30
+ 026C  77 3A				ja nono
+ 026E  EB 4C				jmp okok
+ 0270				May:
+ 0270  83 F8 1F				cmp ax,31		; no more than 31
+ 0273  77 33				ja nono
+ 0275  EB 45				jmp okok
+ 0277				Jun:
+ 0277  83 F8 1E				cmp ax,30		; no more than 30
+ 027A  77 2C				ja nono
+ 027C  EB 3E				jmp okok
+ 027E				July:
+ 027E  83 F8 1F				cmp ax,31		; no more than 31
+ 0281  77 25				ja nono
+ 0283  EB 37				jmp okok
+ 0285				Aug:
+ 0285  83 F8 1F				cmp ax,31		; no more than 31
+ 0288  77 1E				ja nono
+ 028A  EB 30				jmp okok
+ 028C				Sep:
+ 028C  83 F8 1E				cmp ax,30		; no more than 30
+ 028F  77 17				ja nono
+ 0291  EB 29				jmp okok
+ 0293				Oct:
+ 0293  83 F8 1F				cmp ax,31		; no more than 31
+ 0296  77 10				ja nono
+ 0298  EB 22				jmp okok
+ 029A				Nov:
+ 029A  83 F8 1E				cmp ax,30		; no more than 30
+ 029D  77 09				ja nono
+ 029F  EB 1B				jmp okok
+ 02A1				Decem:
+ 02A1  83 F8 1F				cmp ax,31		; no more than 31
+ 02A4  77 02				ja nono
+ 02A6  EB 14				jmp okok
+ 02A8				nono:
+ 02A8  8D 16 0052 R			lea dx,err
+ 02AC  B4 09				mov ah,09
+ 02AE  CD 21				int 21h
+					enterline
+ 02B0  B2 0A		     1		mov dl,10
+ 02B2  B4 02		     1		mov ah,02
+ 02B4  CD 21		     1		int 21h
+					
+ 02B6  E8 FEB7				call ascToNum	; proc will return to here
+ 02B9  E9 FF3A				jmp cD			; check again
+					
+ 02BC				okok:
+ 02BC  8D 3E 00F6 R			lea di,day
+ 02C0  89 05				mov [di],ax		; save the data
+ 02C2  C3				ret
+ 02C3				checkDay endp
+
+ 02C3				cal proc
+					; Kim Larsen Formula
+					; (d+2*m+3*(m+1)/5+y+y/4-y/100+y/400-y/3200+1)%7
+					; si temply saves the answer
+					
+ 02C3  8D 3E 00F4 R			lea di,month
+ 02C7  8B 05				mov ax,[di]
+ 02C9  83 F8 01				cmp ax,1
+ 02CC  74 07				je spec
+ 02CE  83 F8 02				cmp ax,2
+ 02D1  74 02				je spec
+ 02D3  EB 0E				jmp ncal
+
+ 02D5				spec:
+ 02D5  83 C0 0C				add ax,12		; m += 12
+ 02D8  89 05				mov [di],ax
+ 02DA  8D 3E 00F2 R			lea di,year
+ 02DE  8B 05				mov ax,[di]
+ 02E0  48				dec ax			; year --
+ 02E1  89 05				mov	[di],ax
+					
+ 02E3				ncal:	
+ 02E3  33 D2				xor dx,dx
+ 02E5  BE 0000				mov si,0
+ 02E8  8D 3E 00F6 R			lea di,day
+ 02EC  03 35				add si,[di]		; d
+					
+ 02EE  8D 3E 00F4 R			lea di,month
+ 02F2  8B 1D				mov bx,[di]		
+ 02F4  B7 00				mov bh,0		; bl = month
+					 
+ 02F6  33 C0				xor ax,ax
+ 02F8  8A C3				mov al,bl		; al = month
+ 02FA  B2 02				mov dl,2
+ 02FC  F6 E2				mul dl			; m * 2, result in ax
+ 02FE  03 F0				add si,ax		; d+2*m
+					
+ 0300  33 C0				xor ax,ax
+ 0302  8A C3				mov al,bl		; al = month
+ 0304  FE C0				inc al
+ 0306  B2 03				mov dl,3
+ 0308  F6 E2				mul dl			; 3 * ( m + 1 ), result in ax
+ 030A  B2 05				mov dl,5
+ 030C  F6 F2				div dl			
+ 030E  B4 00				mov ah,0		; ax is the 3*(m+1)/5
+ 0310  03 F0				add si,ax		; d+2*m+3*(m+1)/5
+					
+ 0312  8D 3E 00F2 R			lea di,year
+ 0316  8B 1D				mov bx,[di]
+					
+ 0318  03 F3				add si,bx		; d+2*m+3*(m+1)/5+y
+					
+ 031A  33 D2				xor dx,dx
+ 031C  8B C3				mov ax,bx		; ax = year
+ 031E  B9 0004				mov cx,4
+ 0321  F7 F1				div cx
+ 0323  03 F0				add si,ax		; d+2*m+3*(m+1)/5+y+y/4
+					
+ 0325  33 D2				xor dx,dx
+ 0327  8B C3				mov ax,bx		; ax = year
+ 0329  B9 0064				mov cx,100
+ 032C  F7 F1				div cx
+ 032E  2B F0				sub si,ax		; d+2*m+3*(m+1)/5+y+y/4-y/100
+					
+ 0330  33 D2				xor dx,dx
+ 0332  8B C3				mov ax,bx		; ax = year
+ 0334  B9 0190				mov cx,400
+ 0337  F7 F1				div cx
+ 0339  03 F0				add si,ax		; d+2*m+3*(m+1)/5+y+y/4-y/100+y/400
+					
+ 033B  33 D2				xor dx,dx
+ 033D  8B C3				mov ax,bx		; ax = year
+ 033F  B9 0C80				mov cx,3200
+ 0342  F7 F1				div cx
+ 0344  2B F0				sub si,ax		; d+2*m+3*(m+1)/5+y+y/4-y/100+y/400-y/3200
+					
+ 0346  46				inc si			; d+2*m+3*(m+1)/5+y+y/4-y/100+y/400-y/3200+1
+					
+ 0347  33 D2				xor dx,dx
+ 0349  8B C6				mov ax,si
+ 034B  B9 0007				mov cx,7		
+ 034E  F7 F1				div cx			; remainder in dx
+ 0350  8D 3E 00F8 R			lea di,ans
+ 0354  89 15				mov [di],dx
+ 0356  C3				ret
+ 0357				cal endp
+ 0357				CODES ENDS
+				    END START
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    04/19/20 21:02:27
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+enterline  . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 0357	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 00FA	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ascToNum . . . . . . . . . . . .	P Near	 0170	  CODES	Length= 0060 Public
+  again  . . . . . . . . . . . .	L Near	 0170	  CODES	
+  cov  . . . . . . . . . . . . .	L Near	 018C	  CODES	
+  suc  . . . . . . . . . . . . .	L Near	 01B6	  CODES	
+  error1 . . . . . . . . . . . .	L Near	 01BA	  CODES	
+  error  . . . . . . . . . . . .	L Near	 01BF	  CODES	
+  stop . . . . . . . . . . . . .	L Near	 01CF	  CODES	
+cal  . . . . . . . . . . . . . .	P Near	 02C3	  CODES	Length= 0094 Public
+  spec . . . . . . . . . . . . .	L Near	 02D5	  CODES	
+  ncal . . . . . . . . . . . . .	L Near	 02E3	  CODES	
+checkDay . . . . . . . . . . . .	P Near	 01F6	  CODES	Length= 00D4 Public
+  cD . . . . . . . . . . . . . .	L Near	 01F6	  CODES	
+  Jan  . . . . . . . . . . . . .	L Near	 0240	  CODES	
+  Feb  . . . . . . . . . . . . .	L Near	 0247	  CODES	
+  leap . . . . . . . . . . . . .	L Near	 0254	  CODES	
+  nleap  . . . . . . . . . . . .	L Near	 025B	  CODES	
+  Mar  . . . . . . . . . . . . .	L Near	 0262	  CODES	
+  Apr  . . . . . . . . . . . . .	L Near	 0269	  CODES	
+  May  . . . . . . . . . . . . .	L Near	 0270	  CODES	
+  Jun  . . . . . . . . . . . . .	L Near	 0277	  CODES	
+  July . . . . . . . . . . . . .	L Near	 027E	  CODES	
+  Aug  . . . . . . . . . . . . .	L Near	 0285	  CODES	
+  Sep  . . . . . . . . . . . . .	L Near	 028C	  CODES	
+  Oct  . . . . . . . . . . . . .	L Near	 0293	  CODES	
+  Nov  . . . . . . . . . . . . .	L Near	 029A	  CODES	
+  Decem  . . . . . . . . . . . .	L Near	 02A1	  CODES	
+  nono . . . . . . . . . . . . .	L Near	 02A8	  CODES	
+  okok . . . . . . . . . . . . .	L Near	 02BC	  CODES	
+checkMonth . . . . . . . . . . .	P Near	 01D0	  CODES	Length= 0026 Public
+  cM . . . . . . . . . . . . . .	L Near	 01D0	  CODES	
+  bad  . . . . . . . . . . . . .	L Near	 01DC	  CODES	
+  good . . . . . . . . . . . . .	L Near	 01EF	  CODES	
+leapYear . . . . . . . . . . . .	P Near	 011F	  CODES	Length= 0051 Public
+  first  . . . . . . . . . . . .	L Near	 0127	  CODES	
+  second . . . . . . . . . . . .	L Near	 0143	  CODES	
+  yes  . . . . . . . . . . . . .	L Near	 0161	  CODES	
+  no . . . . . . . . . . . . . .	L Near	 0168	  CODES	
+  e  . . . . . . . . . . . . . .	L Near	 016F	  CODES	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+Friday . . . . . . . . . . . . .	Byte	 00B9	  DATAS	
+Monday . . . . . . . . . . . . .	Byte	 007B	  DATAS	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+Saturday . . . . . . . . . . . .	Byte	 00C7	  DATAS	
+Sunday . . . . . . . . . . . . .	Byte	 00D7	  DATAS	
+Thursday . . . . . . . . . . . .	Byte	 00A9	  DATAS	
+Tuesday  . . . . . . . . . . . .	Byte	 0089	  DATAS	
+Wednesday  . . . . . . . . . . .	Byte	 0098	  DATAS	
+ans  . . . . . . . . . . . . . .	Word	 00F8	  DATAS	
+buf  . . . . . . . . . . . . . .	Byte	 00E6	  DATAS	
+day  . . . . . . . . . . . . . .	Word	 00F6	  DATAS	
+err  . . . . . . . . . . . . . .	Byte	 0052	  DATAS	
+exit . . . . . . . . . . . . . .	L Near	 011B	  CODES	
+flag . . . . . . . . . . . . . .	Byte	 00E5	  DATAS	
+fri  . . . . . . . . . . . . . .	L Near	 00FB	  CODES	
+hintD  . . . . . . . . . . . . .	Byte	 003C	  DATAS	
+hintM  . . . . . . . . . . . . .	Byte	 0024	  DATAS	
+hintY  . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+inyear . . . . . . . . . . . . .	L Near	 001D	  CODES	
+month  . . . . . . . . . . . . .	Word	 00F4	  DATAS	
+mon  . . . . . . . . . . . . . .	L Near	 00BB	  CODES	
+rightyear  . . . . . . . . . . .	L Near	 003C	  CODES	
+sat  . . . . . . . . . . . . . .	L Near	 010B	  CODES	
+sun  . . . . . . . . . . . . . .	L Near	 00AB	  CODES	
+thur . . . . . . . . . . . . . .	L Near	 00EB	  CODES	
+tue  . . . . . . . . . . . . . .	L Near	 00CB	  CODES	
+wed  . . . . . . . . . . . . . .	L Near	 00DB	  CODES	
+wrongyear  . . . . . . . . . . .	L Near	 002C	  CODES	
+wrong  . . . . . . . . . . . . .	Byte	 0067	  DATAS	
+year . . . . . . . . . . . . . .	Word	 00F2	  DATAS	
+
+	   0 Warnings
+	   0 Errors
