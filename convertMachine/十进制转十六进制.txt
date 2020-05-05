@@ -1,0 +1,24 @@
+outhex PROC       ;十六进制输出ax中的数
+ push ax
+ push dx
+ mov dx,ax     ;用dx进行循环左移(有些指令会破坏ax中的数据)
+ mov ch,4      ;每个数进行四次输出左移
+shift
+ mov cl,4      ;左移位数为4(16进制中的一位)
+ rol dx, cl
+ mov al,dl
+ and al,0fh    ;将al中的低四位数值取出送入al中
+ add al,30h    ;数字转化为ascii码
+ cmp al,3ah
+ jb print      ;小于10数就直接输出ascii码
+ add al,7h     ;大于等于10的数就把ascii码加7再打印
+               ;(数字和字母直接间隔着七个字符)
+ 
+print
+ call display  ;打印输出第四位十六进制表示的数
+ dec ch        ;ch=ch-1(一共执行4次)
+ jnz shift     ;ch不为0,则跳转回shift继续移位
+ pop dx
+ pop ax
+ret
+outhex ENDP

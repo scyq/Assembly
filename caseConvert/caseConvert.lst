@@ -1,0 +1,97 @@
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 00:38:39
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+				    ;此处输入数据段代码  
+ 0000  001E [			    letters db 30 dup(?)
+        00
+       ]
+ 001E				DATAS ENDS
+
+ 0000				STACKS SEGMENT stack
+ 0000  0100 [			    dw 256 dup(0)
+        0000
+       ]
+ 0200				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    ;此处输入代码段代码
+				    
+ 0005  33 F6			    xor si,si			; 记录个数
+ 0007				input:    
+ 0007  B4 01			    mov ah,01
+ 0009  CD 21			    int 21h
+ 000B  3C 0D			    cmp al,13			; 如果是就回车结束
+ 000D  74 07			    je judge
+ 000F  88 84 0000 R		    mov letters[si],al
+ 0013  46			    inc si
+ 0014  EB F1			    jmp input
+				    
+ 0016				judge:
+ 0016  8B CE				mov cx,si			; 记录数量
+ 0018  33 F6				xor si,si
+					
+ 001A				sj:
+ 001A  8A 84 0000 R			mov al,letters[si]
+ 001E  3C 41				cmp al,'A'
+ 0020  72 13				jb continue
+ 0022  3C 5A				cmp al,'Z'
+ 0024  77 0F				ja continue
+ 0026  EB 00				jmp op
+
+ 0028				op:
+ 0028  04 20				add al,20h
+ 002A  B4 02				mov ah,02
+ 002C  8A D0				mov dl,al
+ 002E  CD 21				int 21h
+ 0030  46				inc si
+ 0031  E2 E7				loop sj
+ 0033  EB 09				jmp bye
+				   
+ 0035				continue:
+ 0035  B4 02			    mov ah,02
+ 0037  8A D0			    mov dl,al
+ 0039  CD 21			    int 21h
+ 003B  46			    inc si
+ 003C  E2 DC			    loop sj
+				    
+ 003E				bye:
+ 003E  B4 4C			    MOV AH,4CH
+ 0040  CD 21			    INT 21H
+ 0042				CODES ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 00:38:39
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 0042	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 001E	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0200	  Para	  Stack	  
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+bye  . . . . . . . . . . . . . .	L Near	 003E	  CODES	
+continue . . . . . . . . . . . .	L Near	 0035	  CODES	
+input  . . . . . . . . . . . . .	L Near	 0007	  CODES	
+judge  . . . . . . . . . . . . .	L Near	 0016	  CODES	
+letters  . . . . . . . . . . . .	Byte	 0000	  DATAS	
+op . . . . . . . . . . . . . . .	L Near	 0028	  CODES	
+sj . . . . . . . . . . . . . . .	L Near	 001A	  CODES	
+
+	   0 Warnings
+	   0 Errors

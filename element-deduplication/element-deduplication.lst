@@ -1,0 +1,397 @@
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 01:33:20
+tempfile.asm						     Page 1 - 1
+
+
+				enterline macro		;定义回车换行的宏指令
+					mov dl,13
+					mov ah,2
+					int 21h
+					mov dl,10
+					mov ah,2
+					int 21h
+				endm
+
+				ascnum macro err,buf,result
+					LOCAL star,cov,error,stop,output,hhh
+					push ax
+					push bx
+					push cx
+					push dx	
+					push si
+					push di
+				star: 
+				    lea dx,buf		;从键盘接收输入数值放入buf缓冲区
+				    mov ah,10
+				    int 21h
+				    
+				    enterline		;回车换行
+				    mov cl,buf+1	;获取实际键入字符数，置于CX寄存器中
+				    xor ch,ch
+				    
+				    lea si,buf+2	;将si指向接收到的第1个字符位置
+				    add si,cx		;因为从个位算起，所以将si指向最后1个接收到的个位数
+				    dec si          ;最后一个键入的字符是回车，往前移动1位
+				    mov bp,0
+				    
+				cov: xor di,di		;累加器清0
+				    
+				    xor dx,dx		;DX寄存器清0
+				    
+				    mov bx,1		;由于从个位数开始算起，因而将所乘权值设为1
+				    
+				    
+				    
+				hhh:
+					mov al,[si]		;取出个位数给al
+					cmp al,20h      ;判断是不是空格
+					jz output       ;如果是空格就
+					cmp al,'0'		;边界检查：如果输入不是0-9的数字，就报错
+					jb error
+					cmp al,'9'
+					ja error
+
+					
+					
+				    sub al,30h		;将al中的ascii码转为数字
+				    xor ah,ah
+				    mul bx			;乘以所处数位的权值
+				    cmp dx,0		;判断结果是否超出16位数范围，如超出则报错
+				    jne error
+				    
+				    add di,ax		;将形成的数值放在累加器di中
+				    
+				    
+				    jc error		;如数值超过16位数范围报错
+				    
+				        
+				    mov ax,bx		;将BX中的数位权值乘以10
+				    mov bx,10
+				    mul bx
+				    mov bx,ax
+				    
+				    dec si			;si指针减1，指向前一数位
+				    
+				    lea cx,buf+2    ;cx是最高位的地址
+				    cmp si,cx
+				    jae hhh         ;当si高于或等于cx时跳转回到hhh
+				    ;jmp hhh    	;按CX中的字符个数计数循环
+				   
+				output:   	
+					mov ax,di		;将最终转换结果从di中放置到ax
+				   	
+				   	mov result[bp],ax       ;bp相当于是偏移量
+				   	add bp,2
+				   	dec si
+				   	lea cx,buf+2
+				    cmp si,cx      ;判断是是不是检测到输入数的最高位
+				    jb stop        ;jb：低于或不高于。如果已经到最高位，就输出
+				    jmp cov        ;否则就将寄存器累加器权值都清空 重新存贮下一个数字
+
+				error:				;给出错误提示
+					lea dx,err
+				    mov ah,9
+				    int 21h
+				    enterline 
+				    
+				    jmp star 		;如出错则返回起始点重新输入  
+				        
+				stop:
+				   pop di
+				   pop si
+				   pop dx
+				   pop cx
+				   pop bx
+				   pop ax
+				   
+				endm
+
+ 0000				DATAS SEGMENT
+ 0000 77 72 6F 6E 67 20		    err db 'wrong input$'
+       69 6E 70 75 74 24
+ 000C  0006 [			    allNumbers dw 6 dup(?)
+        0000
+       ]
+ 0018 32 00			    buffer db 50,?,50 dup(?) 
+       0032 [
+        00
+       ]
+ 004C 00			    flag db 0
+ 004D				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    ;此处输入代码段代码
+				    ascnum err,buffer,allNumbers
+ 0005  50		     1		push ax
+ 0006  53		     1		push bx
+ 0007  51		     1		push cx
+ 0008  52		     1		push dx	
+ 0009  56		     1		push si
+ 000A  57		     1		push di
+ 000B			     1	??0000: 
+ 000B  8D 16 0018 R	     1	    lea dx,buffer		;从键盘接收输入数值放入buf缓冲区
+ 000F  B4 0A		     1	    mov ah,10
+ 0011  CD 21		     1	    int 21h
+ 0013  B2 0D		     2		mov dl,13
+ 0015  B4 02		     2		mov ah,2
+ 0017  CD 21		     2		int 21h
+ 0019  B2 0A		     2		mov dl,10
+ 001B  B4 02		     2		mov ah,2
+ 001D  CD 21		     2		int 21h
+ 001F  8A 0E 0019 R	     1	    mov cl,buffer+1	;获取实际键入字符数，置于CX寄存器中
+ 0023  32 ED		     1	    xor ch,ch
+ 0025  8D 36 001A R	     1	    lea si,buffer+2	;将si指向接收到的第1个字符位置
+ 0029  03 F1		     1	    add si,cx		;因为从个位算起，所以将si指向最后1个接收到的个位数
+ 002B  4E		     1	    dec si          ;最后一个键入的字符是回车，往前移动1位
+ 002C  BD 0000		     1	    mov bp,0
+ 002F  33 FF		     1	??0001: xor di,di		;累加器清0
+ 0031  33 D2		     1	    xor dx,dx		;DX寄存器清0
+ 0033  BB 0001		     1	    mov bx,1		;由于从个位数开始算起，因而将所乘权值设为1
+ 0036			     1	??0005:
+ 0036  8A 04		     1		mov al,[si]		;取出个位数给al
+ 0038  3C 20		     1		cmp al,20h      ;判断是不是空格
+ 003A  74 29		     1		jz ??0004       ;如果是空格就
+ 003C  3C 30		     1		cmp al,'0'		;边界检查：如果输入不是0-9的数字，就报错
+ 003E  72 3A		     1		jb ??0002
+ 0040  3C 39		     1		cmp al,'9'
+ 0042  77 36		     1		ja ??0002
+ 0044  2C 30		     1	    sub al,30h		;将al中的ascii码转为数字
+ 0046  32 E4		     1	    xor ah,ah
+ 0048  F7 E3		     1	    mul bx			;乘以所处数位的权值
+ 004A  83 FA 00		     1	    cmp dx,0		;判断结果是否超出16位数范围，如超出则报错
+ 004D  75 2B		     1	    jne ??0002
+ 004F  03 F8		     1	    add di,ax		;将形成的数值放在累加器di中
+ 0051  72 27		     1	    jc ??0002		;如数值超过16位数范围报错
+ 0053  8B C3		     1	    mov ax,bx		;将BX中的数位权值乘以10
+ 0055  BB 000A		     1	    mov bx,10
+ 0058  F7 E3		     1	    mul bx
+ 005A  8B D8		     1	    mov bx,ax
+ 005C  4E		     1	    dec si			;si指针减1，指向前一数位
+ 005D  8D 0E 001A R	     1	    lea cx,buffer+2    ;cx是最高位的地址
+ 0061  3B F1		     1	    cmp si,cx
+ 0063  73 D1		     1	    jae ??0005         ;当si高于或等于cx时跳转回到hhh
+ 0065			     1	??0004:   	
+ 0065  8B C7		     1		mov ax,di		;将最终转换结果从di中放置到ax
+ 0067  3E: 89 86 000C R	     1	   	mov allNumbers[bp],ax       ;bp相当于是偏移量
+ 006C  83 C5 02		     1	   	add bp,2
+ 006F  4E		     1	   	dec si
+ 0070  8D 0E 001A R	     1	   	lea cx,buffer+2
+ 0074  3B F1		     1	    cmp si,cx      ;判断是是不是检测到输入数的最高位
+ 0076  72 19		     1	    jb ??0003        ;jb：低于或不高于。如果已经到最高位，就输出
+ 0078  EB B5		     1	    jmp ??0001        ;否则就将寄存器累加器权值都清空 重新存贮下一个数字
+ 007A			     1	??0002:				;给出错误提示
+ 007A  8D 16 0000 R	     1		lea dx,err
+ 007E  B4 09		     1	    mov ah,9
+ 0080  CD 21		     1	    int 21h
+ 0082  B2 0D		     2		mov dl,13
+ 0084  B4 02		     2		mov ah,2
+ 0086  CD 21		     2		int 21h
+ 0088  B2 0A		     2		mov dl,10
+ 008A  B4 02		     2		mov ah,2
+ 008C  CD 21		     2		int 21h
+ 008E  E9 FF7A		     1	    jmp ??0000 		;如出错则返回起始点重新输入  
+ 0091			     1	??0003:
+ 0091  5F		     1	   pop di
+ 0092  5E		     1	   pop si
+ 0093  5A		     1	   pop dx
+ 0094  59		     1	   pop cx
+ 0095  5B		     1	   pop bx
+ 0096  58		     1	   pop ax
+				    
+				    enterline
+ 0097  B2 0D		     1		mov dl,13
+ 0099  B4 02		     1		mov ah,2
+ 009B  CD 21		     1		int 21h
+ 009D  B2 0A		     1		mov dl,10
+ 009F  B4 02		     1		mov ah,2
+ 00A1  CD 21		     1		int 21h
+				enterline
+ 00A3  B2 0D		     1		mov dl,13
+ 00A5  B4 02		     1		mov ah,2
+ 00A7  CD 21		     1		int 21h
+ 00A9  B2 0A		     1		mov dl,10
+ 00AB  B4 02		     1		mov ah,2
+ 00AD  CD 21		     1		int 21h
+
+ 00AF  8D 36 000C R			lea si,allNumbers       ;打印第一个字符
+ 00B3  8B 04			    mov ax,[si]              
+ 00B5  E8 0048				call numToAsc
+				      
+ 00B8  BB 0001			    mov bx,1                ; 用bx来计数
+ 00BB  B2 06			    mov dl,6				; 有几个数，mov几
+ 00BD  B6 00			    mov dh,0
+ 00BF  4A			    dec dx                  ; 由于是从第二个数开始检测，因此要dx减1
+				    
+ 00C0  8D 36 000C R		    lea si,allNumbers
+ 00C4  8B FE			    mov di,si
+				    
+ 00C6  83 C6 02			    add si,2                ;从第二个数开始检测,si要加2
+ 00C9  8B CA			    mov cx,dx
+ 00CB				p1:  
+ 00CB  51				push cx
+ 00CC  8B 04				mov ax,[si]             ;ax是正在检测的数
+					
+ 00CE  8B CB				mov cx,bx
+ 00D0				p2:
+ 00D0  51				push cx
+
+ 00D1  8B 15				mov dx,[di]
+ 00D3  3B C2				cmp ax,dx               ;判断是否相等
+ 00D5  75 04				jne continueCheck
+ 00D7  3B C2				cmp ax,dx
+ 00D9  74 06				je notPrint
+					
+ 00DB				continueCheck:	
+ 00DB  83 C7 02				add di,2
+ 00DE  59				pop cx
+ 00DF  EB 03				jmp continueCheck2
+
+ 00E1				notPrint:                   ;注意在loop里跳出后是否有pop cx
+ 00E1  59				pop cx
+ 00E2  EB 0D				jmp nextCheck
+
+ 00E4				continueCheck2:	
+ 00E4  E2 EA				loop p2
+
+ 00E6				print2:
+ 00E6  50				push ax
+ 00E7  53				push bx
+ 00E8  51				push cx
+ 00E9  52				push dx
+					
+ 00EA  E8 0013				call numToAsc
+					
+ 00ED  5A				pop dx
+ 00EE  59				pop cx
+ 00EF  5B				pop bx
+ 00F0  58				pop ax 
+					
+ 00F1				nextCheck:	
+ 00F1  8D 3E 000C R			lea di,allNumbers
+ 00F5  43				inc bx 	
+					
+ 00F6  59				pop cx
+ 00F7  83 C6 02				add si,2
+ 00FA  E2 CF				loop p1
+				    
+ 00FC  B4 4C			    MOV AH,4CH
+ 00FE  CD 21			    INT 21H
+				    
+ 0100				numToAsc proc 
+				    ;待转换数放置于AX寄存器中     
+ 0100  BB 2710			    mov bx,10000		;初始数位权值为10000
+				    
+ 0103  33 D2			cov:xor dx,dx			;将dx:ax中的数值除以权值
+ 0105  F7 F3				div bx
+ 0107  8B CA				mov cx,dx			;余数备份到CX寄存器中
+					
+ 0109  80 3E 004C R 00			cmp flag,0			;检测是否曾遇到非0商值
+ 010E  75 05				jne nor1			;如遇到过，则不管商是否为0都输出显示
+ 0110  83 F8 00				cmp ax,0			;如未遇到过，则检测商是否为0
+ 0113  74 0E				je cont				;为0则不输出显示
+					
+ 0115				nor1:
+ 0115  8A D0				mov dl,al			;将商转换为ascii码输出显示
+ 0117  80 C2 30				add dl,30h
+ 011A  B4 02				mov ah,2
+ 011C  CD 21				int 21h
+					
+ 011E  C6 06 004C R 01			mov flag,1			;曾遇到非0商，则将标志置1
+					
+ 0123				cont:
+ 0123  83 FB 0A				cmp bx,10			;检测权值是否已经修改到十位了
+ 0126  74 0F				je outer			;如果相等，则完成最后的个位数输出显示
+					
+ 0128  33 D2				xor dx,dx			;将数位权值除以10
+ 012A  8B C3	mov ax,bx
+ 012C  BB 000A				mov bx,10
+ 012F  F7 F3			    div bx
+ 0131  8B D8			    mov bx,ax
+				    
+ 0133  8B C1			    mov ax,cx			;将备份的余数送入AX
+ 0135  EB CC			    jmp cov    			;继续循环
+				   
+ 0137				outer:
+ 0137  8A D1				mov dl,cl			;最后的个位数变为ascii码输出显示
+ 0139  80 C2 30				add dl,30h
+ 013C  B4 02				mov ah,2
+ 013E  CD 21				int 21h  
+
+ 0140				space:					;输出一个空格
+ 0140  B8 0020				mov ax,32 			;空格
+ 0143  8A D0				mov dl,al
+ 0145  B4 02				mov ah,2
+ 0147  CD 21				int 21h
+ 0149  C6 06 004C R 00			mov flag,0			;还原，这样输出不会有前导0
+ 014E  C3				ret
+ 014F				numToAsc endp    
+ 014F				CODES ENDS
+				    END START
+
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 01:33:20
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+ascnum . . . . . . . . . . . . .	Proc
+enterline  . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 014F	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 004D	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+numToAsc . . . . . . . . . . . .	P Near	 0100	  CODES	Length= 004F Public
+  cov  . . . . . . . . . . . . .	L Near	 0103	  CODES	
+  nor1 . . . . . . . . . . . . .	L Near	 0115	  CODES	
+  cont . . . . . . . . . . . . .	L Near	 0123	  CODES	
+  outer  . . . . . . . . . . . .	L Near	 0137	  CODES	
+  space  . . . . . . . . . . . .	L Near	 0140	  CODES	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+??0000 . . . . . . . . . . . . .	L Near	 000B	  CODES	
+??0001 . . . . . . . . . . . . .	L Near	 002F	  CODES	
+??0002 . . . . . . . . . . . . .	L Near	 007A	  CODES	
+??0003 . . . . . . . . . . . . .	L Near	 0091	  CODES	
+??0004 . . . . . . . . . . . . .	L Near	 0065	  CODES	
+??0005 . . . . . . . . . . . . .	L Near	 0036	  CODES	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+allNumbers . . . . . . . . . . .	Word	 000C	  DATAS	
+buffer . . . . . . . . . . . . .	Byte	 0018	  DATAS	
+continueCheck2 . . . . . . . . .	L Near	 00E4	  CODES	
+continueCheck  . . . . . . . . .	L Near	 00DB	  CODES	
+err  . . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+flag . . . . . . . . . . . . . .	Byte	 004C	  DATAS	
+nextCheck  . . . . . . . . . . .	L Near	 00F1	  CODES	
+notPrint . . . . . . . . . . . .	L Near	 00E1	  CODES	
+p1 . . . . . . . . . . . . . . .	L Near	 00CB	  CODES	
+p2 . . . . . . . . . . . . . . .	L Near	 00D0	  CODES	
+print2 . . . . . . . . . . . . .	L Near	 00E6	  CODES	
+
+	   0 Warnings
+	   0 Errors
