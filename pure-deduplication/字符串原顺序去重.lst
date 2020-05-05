@@ -1,0 +1,177 @@
+Microsoft (R) Macro Assembler Version 6.11		    05/05/20 22:40:50
+tempfile.asm						     Page 1 - 1
+
+
+				enterline macro		  ;回车换行
+					mov dl,13
+					mov ah,2
+					int 21h
+					mov dl,10
+					mov ah,2
+					int 21h
+				endm
+
+
+ 0000				DATAS SEGMENT
+ 0000 15			    BUFF db 21           ;回车也要占1个
+ 0001  00			    	 db ?
+ 0002  0015 [			         db 21 dup(?)
+        00
+       ]
+				         
+ 0017 00			    flag db 0
+				    
+ 0018 49 6E 70 75 74 20		    MSG1 db 'Input the string: $'
+       74 68 65 20 73 74
+       72 69 6E 67 3A 20
+       24
+ 002B 41 66 74 65 72 20		    MSG2 db 'After eliminating the numerical string: $'
+       65 6C 69 6D 69 6E
+       61 74 69 6E 67 20
+       74 68 65 20 6E 75
+       6D 65 72 69 63 61
+       6C 20 73 74 72 69
+       6E 67 3A 20 24
+				    
+ 0054				DATAS ENDS
+
+
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    
+ 0005  8D 16 0018 R		    lea dx,MSG1             ;输入提示
+ 0009  B4 09			    mov ah,9
+ 000B  CD 21			    int 21h
+				    
+ 000D  8D 16 0000 R		    lea dx,BUFF             ;输入字符串
+ 0011  B4 0A			    mov ah,0Ah
+ 0013  CD 21			    int 21h
+				    
+				    enterline
+ 0015  B2 0D		     1		mov dl,13
+ 0017  B4 02		     1		mov ah,2
+ 0019  CD 21		     1		int 21h
+ 001B  B2 0A		     1		mov dl,10
+ 001D  B4 02		     1		mov ah,2
+ 001F  CD 21		     1		int 21h
+				    
+ 0021  8D 36 0002 R		    lea si,BUFF+2           ;打印第一个字符
+ 0025  8A 14			    mov dl,[si]
+ 0027  B6 00			    mov dh,0               
+ 0029  B4 02				mov ah,2
+ 002B  CD 21				int 21h
+				      
+ 002D  BB 0001			    mov bx,1                ;用bx来计数
+ 0030  8A 16 0001 R		    mov dl,BUFF+1
+ 0034  B6 00			    mov dh,0
+ 0036  4A			    dec dx                  ;由于是从第二个数开始检测，因此要dx减1
+				    
+ 0037  8D 36 0002 R		    lea si,BUFF+2
+ 003B  8B FE			    mov di,si
+				    
+ 003D  46			    inc si                  ;从第二个数开始检测,si要加1
+ 003E  8B CA			    mov cx,dx
+ 0040				s1:  
+ 0040  51				push cx
+ 0041  8A 04				mov al,[si]             ;只取一个用al,al是正在检测的数
+ 0043  B4 00				mov ah,0
+					
+ 0045  8B CB				mov cx,bx
+ 0047				s2:
+ 0047  51				push cx
+
+ 0048  8A 15				mov dl,[di]
+ 004A  B6 00				mov dh,0
+ 004C  3B C2				cmp ax,dx               ;判断是否相等
+ 004E  75 04				jne continueCheck
+ 0050  3B C2				cmp ax,dx
+ 0052  74 04				je notPrint
+					
+ 0054				continueCheck:	
+ 0054  47				inc di
+ 0055  59				pop cx
+ 0056  EB 03				jmp continueCheck2
+
+ 0058				notPrint:                   ;注意在loop里跳出后是否有pop cx
+ 0058  59				pop cx
+ 0059  EB 0C				jmp nextCheck
+
+ 005B				continueCheck2:	
+ 005B  E2 EA				loop s2
+
+ 005D				print:
+ 005D  50				push ax
+ 005E  52				push dx
+					
+ 005F  8A D0				mov dl,al
+ 0061  B4 02				mov ah,2
+ 0063  CD 21				int 21h
+					
+ 0065  5A				pop dx
+ 0066  58				pop ax 
+					
+ 0067				nextCheck:	
+ 0067  8D 3E 0002 R			lea di,BUFF+2
+ 006B  43				inc bx 	
+					
+ 006C  59				pop cx
+ 006D  46				inc si
+ 006E  E2 D0				loop s1
+				    
+ 0070  B4 4C			    MOV AH,4CH
+ 0072  CD 21			    INT 21H
+				    
+ 0074				CODES ENDS
+				    END START
+
+
+Microsoft (R) Macro Assembler Version 6.11		    05/05/20 22:40:50
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+enterline  . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 0074	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0054	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+BUFF . . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+MSG1 . . . . . . . . . . . . . .	Byte	 0018	  DATAS	
+MSG2 . . . . . . . . . . . . . .	Byte	 002B	  DATAS	
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+continueCheck2 . . . . . . . . .	L Near	 005B	  CODES	
+continueCheck  . . . . . . . . .	L Near	 0054	  CODES	
+flag . . . . . . . . . . . . . .	Byte	 0017	  DATAS	
+nextCheck  . . . . . . . . . . .	L Near	 0067	  CODES	
+notPrint . . . . . . . . . . . .	L Near	 0058	  CODES	
+print  . . . . . . . . . . . . .	L Near	 005D	  CODES	
+s1 . . . . . . . . . . . . . . .	L Near	 0040	  CODES	
+s2 . . . . . . . . . . . . . . .	L Near	 0047	  CODES	
+
+	   0 Warnings
+	   0 Errors

@@ -1,0 +1,747 @@
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 00:00:05
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				data segment
+ 0000 0A 0D 2A 2A 2A 2A		menu 	db	10,13,'*************************************************'
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A
+ 0033  0A 0D 2A 20 20 20			db	10,13,'*            please choice action:              *'
+       20 20 20 20 20 20
+       20 20 20 70 6C 65
+       61 73 65 20 63 68
+       6F 69 63 65 20 61
+       63 74 69 6F 6E 3A
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 0066  0A 0D 2A 20 20 20		 	db	10,13,'*            1.binary to hexadecimal            *'
+       20 20 20 20 20 20
+       20 20 20 31 2E 62
+       69 6E 61 72 79 20
+       74 6F 20 68 65 78
+       61 64 65 63 69 6D
+       61 6C 20 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 0099  0A 0D 2A 20 20 20		 	db	10,13,'*            2.binary to decimal                *'	 	
+       20 20 20 20 20 20
+       20 20 20 32 2E 62
+       69 6E 61 72 79 20
+       74 6F 20 64 65 63
+       69 6D 61 6C 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 00CC  0A 0D 2A 20 20 20		 	db	10,13,'*            3.hexadecimal to binary            *'
+       20 20 20 20 20 20
+       20 20 20 33 2E 68
+       65 78 61 64 65 63
+       69 6D 61 6C 20 74
+       6F 20 62 69 6E 61
+       72 79 20 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 00FF  0A 0D 2A 20 20 20		 	db	10,13,'*            4.hexadecimal to decimal           *'
+       20 20 20 20 20 20
+       20 20 20 34 2E 68
+       65 78 61 64 65 63
+       69 6D 61 6C 20 74
+       6F 20 64 65 63 69
+       6D 61 6C 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 0132  0A 0D 2A 20 20 20		 	db	10,13,'*            5.decimal to binary                *'
+       20 20 20 20 20 20
+       20 20 20 35 2E 64
+       65 63 69 6D 61 6C
+       20 74 6F 20 62 69
+       6E 61 72 79 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 0165  0A 0D 2A 20 20 20		 	db	10,13,'*            6.decimal to hexadecimal           *'
+       20 20 20 20 20 20
+       20 20 20 36 2E 64
+       65 63 69 6D 61 6C
+       20 74 6F 20 68 65
+       78 61 64 65 63 69
+       6D 61 6C 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 0198  0A 0D 2A 20 20 20			db	10,13,'*            0.exit                             *'
+       20 20 20 20 20 20
+       20 20 20 30 2E 65
+       78 69 74 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 2A
+ 01CB  0A 0D 2A 2A 2A 2A			db	10,13,'*************************************************',10,13,'$'
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 0A 0D 24
+ 0201 0A 0D 70 6C 65 61		str2		db	10,13,'please input the binary string:',10,13, '$'
+       73 65 20 69 6E 70
+       75 74 20 74 68 65
+       20 62 69 6E 61 72
+       79 20 73 74 72 69
+       6E 67 3A 0A 0D 24
+ 0225 74 68 65 20 68 65		str21	db	'the hexadecimal string is:',10,13, '$'
+       78 61 64 65 63 69
+       6D 61 6C 20 73 74
+       72 69 6E 67 20 69
+       73 3A 0A 0D 24
+ 0242 74 68 65 20 64 65		str22	db	'the decimal string is:',10,13, '$'
+       63 69 6D 61 6C 20
+       73 74 72 69 6E 67
+       20 69 73 3A 0A 0D
+       24
+
+ 025B 0A 0D 70 6C 65 61		str3		db	10,13,'please input the hexadecimal string:',10,13, '$'
+       73 65 20 69 6E 70
+       75 74 20 74 68 65
+       20 68 65 78 61 64
+       65 63 69 6D 61 6C
+       20 73 74 72 69 6E
+       67 3A 0A 0D 24
+ 0284 74 68 65 20 62 69		str31	db	'the binary string is:',10,13, '$'
+       6E 61 72 79 20 73
+       74 72 69 6E 67 20
+       69 73 3A 0A 0D 24
+ 029C 74 68 65 20 64 65		str32	db	'the decimal string is:',10,13, '$'
+       63 69 6D 61 6C 20
+       73 74 72 69 6E 67
+       20 69 73 3A 0A 0D
+       24
+
+ 02B5 0A 0D 70 6C 65 61		str4		db	10,13,'please input the decimal string:',10,13, '$'
+       73 65 20 69 6E 70
+       75 74 20 74 68 65
+       20 64 65 63 69 6D
+       61 6C 20 73 74 72
+       69 6E 67 3A 0A 0D
+       24
+ 02DA 74 68 65 20 62 69		str41	db	'the binary string is:',10,13, '$'
+       6E 61 72 79 20 73
+       74 72 69 6E 67 20
+       69 73 3A 0A 0D 24
+ 02F2 74 68 65 20 68 65		str42	db	'the hexadecimal string is:',10,13, '$'
+       78 61 64 65 63 69
+       6D 61 6C 20 73 74
+       72 69 6E 67 20 69
+       73 3A 0A 0D 24
+ 030F				data	ends
+
+ 0000				code segment
+					assume cs:code,ds:data
+
+				charin macro					
+						mov ah,01h				
+						int 21h					
+				endm
+
+				numin macro
+						charin
+						sub al,48
+				endm
+
+				strin macro stringin			
+						lea dx,stringin		
+						mov ah,0ah				
+						int 21h					
+				endm	
+				charout	macro outchar			
+						push ax
+						push dx
+						mov dl, outchar
+						mov ah, 02h				
+						int 21h					
+						pop dx
+						pop ax
+				endm
+				numout	macro outnum
+						push ax
+						push dx
+						mov dl, outnum
+						add dl, 48				
+						mov ah, 02h				
+						int 21h					
+						pop dx
+						pop ax
+				endm
+
+				strout	macro stringout			
+						push ax
+						push dx
+						lea dx, stringout		
+						mov ah, 9				
+						int 21h					
+						pop	dx
+						pop	ax
+				endm
+
+				endl  macro					
+						push ax
+						push bx
+						push cx
+						push dx
+						
+						mov dl, 0ah				
+						mov ah, 2
+						int 21h					
+						mov dl, 0dh				
+						int 21h					
+						
+						pop dx
+						pop cx
+						pop bx
+						pop ax
+				endm
+
+
+				outax	macro	basenum			
+						push ax
+						push bx
+						push cx
+						push dx
+						
+						mov bx, basenum			
+						call outaxp				
+						
+						pop dx
+						pop cx
+						pop bx
+						pop ax
+				endm
+ 0000				outaxp	proc
+ 0000  BA 0000					mov dx,0				
+ 0003  B9 0000					mov cx,0			
+ 0006				outaxp_circle:
+ 0006  83 F8 00					cmp ax,0				
+ 0009  74 09					je outaxp_next			
+ 000B  F7 F3					div bx					
+ 000D  52					push dx					
+ 000E  BA 0000					mov dx,0				
+ 0011  41					inc cx					
+ 0012  EB F2					jmp outaxp_circle	
+ 0014				outaxp_next:					
+ 0014  58					pop ax
+ 0015  3C 0A					cmp al,10						
+ 0017  72 0E				jb 	nout
+ 0019  04 37					add al,55				
+						charout al
+ 001B  50		     1			push ax
+ 001C  52		     1			push dx
+ 001D  8A D0		     1			mov dl, al
+ 001F  B4 02		     1			mov ah, 02h				
+ 0021  CD 21		     1			int 21h					
+ 0023  5A		     1			pop dx
+ 0024  58		     1			pop ax
+ 0025  EB 0D					jmp cout
+						
+ 0027				nout:	
+					numout al
+ 0027  50		     1			push ax
+ 0028  52		     1			push dx
+ 0029  8A D0		     1			mov dl, al
+ 002B  80 C2 30		     1			add dl, 48				
+ 002E  B4 02		     1			mov ah, 02h				
+ 0030  CD 21		     1			int 21h					
+ 0032  5A		     1			pop dx
+ 0033  58		     1			pop ax
+ 0034				cout:	
+ 0034  E2 DE				loop outaxp_next
+ 0036  C3				ret	
+ 0037				outaxp	endp
+
+
+				inax macro basenum			
+						push bx
+						push cx
+						push dx
+						
+						mov cx, basenum			
+						call inaxp						
+						pop dx
+						pop cx
+						pop bx
+				endm
+ 0037				inaxp	proc
+ 0037  B8 0000					mov	ax,	0
+ 003A				inaxp0:	
+ 003A  50					push ax
+ 003B				inaxp1:	charin					
+ 003B  B4 01		     1			mov ah,01h				
+ 003D  CD 21		     1			int 21h					
+ 003F  3C 0D					cmp al, 13
+ 0041  74 34					je	inaxe				
+ 0043  3C 30					cmp al, '0'
+ 0045  72 F4					jb	inaxp1			
+ 0047  3C 39					cmp al, '9'	
+ 0049  77 04					ja	inaxnext1			
+ 004B  2C 30					sub	al, 48				
+ 004D  EB 18					jmp inaxnum				
+ 004F				inaxnext1:	
+ 004F  3C 41					cmp al, 'A'
+ 0051  72 E8					jb	inaxp1				
+ 0053  3C 46					cmp al, 'F'
+ 0055  77 04					ja	inaxnext2			
+ 0057  2C 37					sub	al, 55				
+ 0059  EB 0C					jmp inaxnum
+ 005B				inaxnext2:
+ 005B  3C 61					cmp al, 'a'
+ 005D  72 DC					jb	inaxp1				
+ 005F  3C 7A					cmp al, 'z'
+ 0061  77 D8					ja	inaxp1				
+ 0063  2C 57					sub	al, 87					
+ 0065  EB 00					jmp inaxnum
+ 0067				inaxnum:
+ 0067  B7 00					mov bh, 0				
+ 0069  8A D8					mov bl, al
+ 006B  58					pop	ax
+						
+ 006C  83 F8 00					cmp ax, 0						
+ 006F  74 02				je	inaxadd
+ 0071  F7 E1					mul cx					
+ 0073				inaxadd:
+ 0073  03 C3					add ax, bx
+ 0075  EB C3					jmp inaxp0	
+ 0077				inaxe:	
+ 0077  58				pop	ax						
+ 0078  C3				ret	
+ 0079				inaxp endp
+ 0079				start:	
+ 0079  B8 ---- R				mov ax,data			
+ 007C  8E D8					mov ds,ax				
+ 007E				display:		
+						strout menu				
+ 007E  50		     1			push ax
+ 007F  52		     1			push dx
+ 0080  8D 16 0000 R	     1			lea dx, menu		
+ 0084  B4 09		     1			mov ah, 9				
+ 0086  CD 21		     1			int 21h					
+ 0088  5A		     1			pop	dx
+ 0089  58		     1			pop	ax
+						charin					
+ 008A  B4 01		     1			mov ah,01h				
+ 008C  CD 21		     1			int 21h					
+ 008E  3C 31					cmp al,'1'
+ 0090  74 29					je bin_hex
+ 0092  3C 32					cmp al,'2'
+ 0094  74 6C					je bin_dec
+ 0096  3C 33					cmp al,'3'
+ 0098  75 03 E9 00AC				je hex_bin
+ 009D  3C 34					cmp al,'4'
+ 009F  75 03 E9 00EC				je hex_dec
+ 00A4  3C 35					cmp al,'5'
+ 00A6  75 03 E9 012C				je dec_bin
+ 00AB  3C 36					cmp al,'6'
+ 00AD  75 03 E9 016C				je dec_hex
+ 00B2  3C 30					cmp al,'0'
+ 00B4  75 03 E9 01AC				je exit
+ 00B9  EB C3					jmp	display
+ 00BB				bin_hex:	
+						strout str2
+ 00BB  50		     1			push ax
+ 00BC  52		     1			push dx
+ 00BD  8D 16 0201 R	     1			lea dx, str2		
+ 00C1  B4 09		     1			mov ah, 9				
+ 00C3  CD 21		     1			int 21h					
+ 00C5  5A		     1			pop	dx
+ 00C6  58		     1			pop	ax
+						inax 2				
+ 00C7  53		     1			push bx
+ 00C8  51		     1			push cx
+ 00C9  52		     1			push dx
+ 00CA  B9 0002		     1			mov cx, 2			
+ 00CD  E8 FF67		     1			call inaxp						
+ 00D0  5A		     1			pop dx
+ 00D1  59		     1			pop cx
+ 00D2  5B		     1			pop bx
+						endl
+ 00D3  50		     1			push ax
+ 00D4  53		     1			push bx
+ 00D5  51		     1			push cx
+ 00D6  52		     1			push dx
+ 00D7  B2 0A		     1			mov dl, 0ah				
+ 00D9  B4 02		     1			mov ah, 2
+ 00DB  CD 21		     1			int 21h					
+ 00DD  B2 0D		     1			mov dl, 0dh				
+ 00DF  CD 21		     1			int 21h					
+ 00E1  5A		     1			pop dx
+ 00E2  59		     1			pop cx
+ 00E3  5B		     1			pop bx
+ 00E4  58		     1			pop ax
+						strout str21
+ 00E5  50		     1			push ax
+ 00E6  52		     1			push dx
+ 00E7  8D 16 0225 R	     1			lea dx, str21		
+ 00EB  B4 09		     1			mov ah, 9				
+ 00ED  CD 21		     1			int 21h					
+ 00EF  5A		     1			pop	dx
+ 00F0  58		     1			pop	ax
+						outax 16				
+ 00F1  50		     1			push ax
+ 00F2  53		     1			push bx
+ 00F3  51		     1			push cx
+ 00F4  52		     1			push dx
+ 00F5  BB 0010		     1			mov bx, 16			
+ 00F8  E8 FF05		     1			call outaxp				
+ 00FB  5A		     1			pop dx
+ 00FC  59		     1			pop cx
+ 00FD  5B		     1			pop bx
+ 00FE  58		     1			pop ax
+ 00FF  E9 FF7C					jmp display	
+ 0102				bin_dec:
+						strout str2
+ 0102  50		     1			push ax
+ 0103  52		     1			push dx
+ 0104  8D 16 0201 R	     1			lea dx, str2		
+ 0108  B4 09		     1			mov ah, 9				
+ 010A  CD 21		     1			int 21h					
+ 010C  5A		     1			pop	dx
+ 010D  58		     1			pop	ax
+						inax 2
+ 010E  53		     1			push bx
+ 010F  51		     1			push cx
+ 0110  52		     1			push dx
+ 0111  B9 0002		     1			mov cx, 2			
+ 0114  E8 FF20		     1			call inaxp						
+ 0117  5A		     1			pop dx
+ 0118  59		     1			pop cx
+ 0119  5B		     1			pop bx
+						endl
+ 011A  50		     1			push ax
+ 011B  53		     1			push bx
+ 011C  51		     1			push cx
+ 011D  52		     1			push dx
+ 011E  B2 0A		     1			mov dl, 0ah				
+ 0120  B4 02		     1			mov ah, 2
+ 0122  CD 21		     1			int 21h					
+ 0124  B2 0D		     1			mov dl, 0dh				
+ 0126  CD 21		     1			int 21h					
+ 0128  5A		     1			pop dx
+ 0129  59		     1			pop cx
+ 012A  5B		     1			pop bx
+ 012B  58		     1			pop ax
+						strout str22
+ 012C  50		     1			push ax
+ 012D  52		     1			push dx
+ 012E  8D 16 0242 R	     1			lea dx, str22		
+ 0132  B4 09		     1			mov ah, 9				
+ 0134  CD 21		     1			int 21h					
+ 0136  5A		     1			pop	dx
+ 0137  58		     1			pop	ax
+						outax 10
+ 0138  50		     1			push ax
+ 0139  53		     1			push bx
+ 013A  51		     1			push cx
+ 013B  52		     1			push dx
+ 013C  BB 000A		     1			mov bx, 10			
+ 013F  E8 FEBE		     1			call outaxp				
+ 0142  5A		     1			pop dx
+ 0143  59		     1			pop cx
+ 0144  5B		     1			pop bx
+ 0145  58		     1			pop ax
+ 0146  E9 FF35					jmp display
+ 0149				hex_bin:	
+						strout str3
+ 0149  50		     1			push ax
+ 014A  52		     1			push dx
+ 014B  8D 16 025B R	     1			lea dx, str3		
+ 014F  B4 09		     1			mov ah, 9				
+ 0151  CD 21		     1			int 21h					
+ 0153  5A		     1			pop	dx
+ 0154  58		     1			pop	ax
+						inax 16				
+ 0155  53		     1			push bx
+ 0156  51		     1			push cx
+ 0157  52		     1			push dx
+ 0158  B9 0010		     1			mov cx, 16			
+ 015B  E8 FED9		     1			call inaxp						
+ 015E  5A		     1			pop dx
+ 015F  59		     1			pop cx
+ 0160  5B		     1			pop bx
+						endl
+ 0161  50		     1			push ax
+ 0162  53		     1			push bx
+ 0163  51		     1			push cx
+ 0164  52		     1			push dx
+ 0165  B2 0A		     1			mov dl, 0ah				
+ 0167  B4 02		     1			mov ah, 2
+ 0169  CD 21		     1			int 21h					
+ 016B  B2 0D		     1			mov dl, 0dh				
+ 016D  CD 21		     1			int 21h					
+ 016F  5A		     1			pop dx
+ 0170  59		     1			pop cx
+ 0171  5B		     1			pop bx
+ 0172  58		     1			pop ax
+						strout str31
+ 0173  50		     1			push ax
+ 0174  52		     1			push dx
+ 0175  8D 16 0284 R	     1			lea dx, str31		
+ 0179  B4 09		     1			mov ah, 9				
+ 017B  CD 21		     1			int 21h					
+ 017D  5A		     1			pop	dx
+ 017E  58		     1			pop	ax
+						outax 2				
+ 017F  50		     1			push ax
+ 0180  53		     1			push bx
+ 0181  51		     1			push cx
+ 0182  52		     1			push dx
+ 0183  BB 0002		     1			mov bx, 2			
+ 0186  E8 FE77		     1			call outaxp				
+ 0189  5A		     1			pop dx
+ 018A  59		     1			pop cx
+ 018B  5B		     1			pop bx
+ 018C  58		     1			pop ax
+ 018D  E9 FEEE					jmp display		
+ 0190				hex_dec:	
+						strout str3
+ 0190  50		     1			push ax
+ 0191  52		     1			push dx
+ 0192  8D 16 025B R	     1			lea dx, str3		
+ 0196  B4 09		     1			mov ah, 9				
+ 0198  CD 21		     1			int 21h					
+ 019A  5A		     1			pop	dx
+ 019B  58		     1			pop	ax
+						inax 16				
+ 019C  53		     1			push bx
+ 019D  51		     1			push cx
+ 019E  52		     1			push dx
+ 019F  B9 0010		     1			mov cx, 16			
+ 01A2  E8 FE92		     1			call inaxp						
+ 01A5  5A		     1			pop dx
+ 01A6  59		     1			pop cx
+ 01A7  5B		     1			pop bx
+						endl
+ 01A8  50		     1			push ax
+ 01A9  53		     1			push bx
+ 01AA  51		     1			push cx
+ 01AB  52		     1			push dx
+ 01AC  B2 0A		     1			mov dl, 0ah				
+ 01AE  B4 02		     1			mov ah, 2
+ 01B0  CD 21		     1			int 21h					
+ 01B2  B2 0D		     1			mov dl, 0dh				
+ 01B4  CD 21		     1			int 21h					
+ 01B6  5A		     1			pop dx
+ 01B7  59		     1			pop cx
+ 01B8  5B		     1			pop bx
+ 01B9  58		     1			pop ax
+						strout str32
+ 01BA  50		     1			push ax
+ 01BB  52		     1			push dx
+ 01BC  8D 16 029C R	     1			lea dx, str32		
+ 01C0  B4 09		     1			mov ah, 9				
+ 01C2  CD 21		     1			int 21h					
+ 01C4  5A		     1			pop	dx
+ 01C5  58		     1			pop	ax
+						outax 10				
+ 01C6  50		     1			push ax
+ 01C7  53		     1			push bx
+ 01C8  51		     1			push cx
+ 01C9  52		     1			push dx
+ 01CA  BB 000A		     1			mov bx, 10			
+ 01CD  E8 FE30		     1			call outaxp				
+ 01D0  5A		     1			pop dx
+ 01D1  59		     1			pop cx
+ 01D2  5B		     1			pop bx
+ 01D3  58		     1			pop ax
+ 01D4  E9 FEA7					jmp	display	
+ 01D7				dec_bin:
+						strout str4
+ 01D7  50		     1			push ax
+ 01D8  52		     1			push dx
+ 01D9  8D 16 02B5 R	     1			lea dx, str4		
+ 01DD  B4 09		     1			mov ah, 9				
+ 01DF  CD 21		     1			int 21h					
+ 01E1  5A		     1			pop	dx
+ 01E2  58		     1			pop	ax
+						inax 10
+ 01E3  53		     1			push bx
+ 01E4  51		     1			push cx
+ 01E5  52		     1			push dx
+ 01E6  B9 000A		     1			mov cx, 10			
+ 01E9  E8 FE4B		     1			call inaxp						
+ 01EC  5A		     1			pop dx
+ 01ED  59		     1			pop cx
+ 01EE  5B		     1			pop bx
+						endl
+ 01EF  50		     1			push ax
+ 01F0  53		     1			push bx
+ 01F1  51		     1			push cx
+ 01F2  52		     1			push dx
+ 01F3  B2 0A		     1			mov dl, 0ah				
+ 01F5  B4 02		     1			mov ah, 2
+ 01F7  CD 21		     1			int 21h					
+ 01F9  B2 0D		     1			mov dl, 0dh				
+ 01FB  CD 21		     1			int 21h					
+ 01FD  5A		     1			pop dx
+ 01FE  59		     1			pop cx
+ 01FF  5B		     1			pop bx
+ 0200  58		     1			pop ax
+						strout str41
+ 0201  50		     1			push ax
+ 0202  52		     1			push dx
+ 0203  8D 16 02DA R	     1			lea dx, str41		
+ 0207  B4 09		     1			mov ah, 9				
+ 0209  CD 21		     1			int 21h					
+ 020B  5A		     1			pop	dx
+ 020C  58		     1			pop	ax
+						outax 2
+ 020D  50		     1			push ax
+ 020E  53		     1			push bx
+ 020F  51		     1			push cx
+ 0210  52		     1			push dx
+ 0211  BB 0002		     1			mov bx, 2			
+ 0214  E8 FDE9		     1			call outaxp				
+ 0217  5A		     1			pop dx
+ 0218  59		     1			pop cx
+ 0219  5B		     1			pop bx
+ 021A  58		     1			pop ax
+ 021B  E9 FE60					jmp display
+ 021E				dec_hex:
+						strout str4
+ 021E  50		     1			push ax
+ 021F  52		     1			push dx
+ 0220  8D 16 02B5 R	     1			lea dx, str4		
+ 0224  B4 09		     1			mov ah, 9				
+ 0226  CD 21		     1			int 21h					
+ 0228  5A		     1			pop	dx
+ 0229  58		     1			pop	ax
+						inax 10
+ 022A  53		     1			push bx
+ 022B  51		     1			push cx
+ 022C  52		     1			push dx
+ 022D  B9 000A		     1			mov cx, 10			
+ 0230  E8 FE04		     1			call inaxp						
+ 0233  5A		     1			pop dx
+ 0234  59		     1			pop cx
+ 0235  5B		     1			pop bx
+						endl
+ 0236  50		     1			push ax
+ 0237  53		     1			push bx
+ 0238  51		     1			push cx
+ 0239  52		     1			push dx
+ 023A  B2 0A		     1			mov dl, 0ah				
+ 023C  B4 02		     1			mov ah, 2
+ 023E  CD 21		     1			int 21h					
+ 0240  B2 0D		     1			mov dl, 0dh				
+ 0242  CD 21		     1			int 21h					
+ 0244  5A		     1			pop dx
+ 0245  59		     1			pop cx
+ 0246  5B		     1			pop bx
+ 0247  58		     1			pop ax
+						strout str42
+ 0248  50		     1			push ax
+ 0249  52		     1			push dx
+ 024A  8D 16 02F2 R	     1			lea dx, str42		
+ 024E  B4 09		     1			mov ah, 9				
+ 0250  CD 21		     1			int 21h					
+ 0252  5A		     1			pop	dx
+ 0253  58		     1			pop	ax
+						outax 16
+ 0254  50		     1			push ax
+ 0255  53		     1			push bx
+ 0256  51		     1			push cx
+ 0257  52		     1			push dx
+ 0258  BB 0010		     1			mov bx, 16			
+ 025B  E8 FDA2		     1			call outaxp				
+ 025E  5A		     1			pop dx
+ 025F  59		     1			pop cx
+ 0260  5B		     1			pop bx
+ 0261  58		     1			pop ax
+ 0262  E9 FE19					jmp display
+ 0265				exit:	
+ 0265  B4 4C					mov ah,4ch				
+ 0267  CD 21					int 21h	
+ 0269				code ends
+					end start
+
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 00:00:05
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+charin . . . . . . . . . . . . .	Proc
+charout  . . . . . . . . . . . .	Proc
+endl . . . . . . . . . . . . . .	Proc
+inax . . . . . . . . . . . . . .	Proc
+numin  . . . . . . . . . . . . .	Proc
+numout . . . . . . . . . . . . .	Proc
+outax  . . . . . . . . . . . . .	Proc
+strin  . . . . . . . . . . . . .	Proc
+strout . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+code . . . . . . . . . . . . . .	16 Bit	 0269	  Para	  Private 
+data . . . . . . . . . . . . . .	16 Bit	 030F	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+inaxp  . . . . . . . . . . . . .	P Near	 0037	  code	Length= 0042 Public
+  inaxp0 . . . . . . . . . . . .	L Near	 003A	  code	
+  inaxp1 . . . . . . . . . . . .	L Near	 003B	  code	
+  inaxnext1  . . . . . . . . . .	L Near	 004F	  code	
+  inaxnext2  . . . . . . . . . .	L Near	 005B	  code	
+  inaxnum  . . . . . . . . . . .	L Near	 0067	  code	
+  inaxadd  . . . . . . . . . . .	L Near	 0073	  code	
+  inaxe  . . . . . . . . . . . .	L Near	 0077	  code	
+outaxp . . . . . . . . . . . . .	P Near	 0000	  code	Length= 0037 Public
+  outaxp_circle  . . . . . . . .	L Near	 0006	  code	
+  outaxp_next  . . . . . . . . .	L Near	 0014	  code	
+  nout . . . . . . . . . . . . .	L Near	 0027	  code	
+  cout . . . . . . . . . . . . .	L Near	 0034	  code	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+bin_dec  . . . . . . . . . . . .	L Near	 0102	  code	
+bin_hex  . . . . . . . . . . . .	L Near	 00BB	  code	
+dec_bin  . . . . . . . . . . . .	L Near	 01D7	  code	
+dec_hex  . . . . . . . . . . . .	L Near	 021E	  code	
+display  . . . . . . . . . . . .	L Near	 007E	  code	
+exit . . . . . . . . . . . . . .	L Near	 0265	  code	
+hex_bin  . . . . . . . . . . . .	L Near	 0149	  code	
+hex_dec  . . . . . . . . . . . .	L Near	 0190	  code	
+menu . . . . . . . . . . . . . .	Byte	 0000	  data	
+start  . . . . . . . . . . . . .	L Near	 0079	  code	
+str21  . . . . . . . . . . . . .	Byte	 0225	  data	
+str22  . . . . . . . . . . . . .	Byte	 0242	  data	
+str2 . . . . . . . . . . . . . .	Byte	 0201	  data	
+str31  . . . . . . . . . . . . .	Byte	 0284	  data	
+str32  . . . . . . . . . . . . .	Byte	 029C	  data	
+str3 . . . . . . . . . . . . . .	Byte	 025B	  data	
+str41  . . . . . . . . . . . . .	Byte	 02DA	  data	
+str42  . . . . . . . . . . . . .	Byte	 02F2	  data	
+str4 . . . . . . . . . . . . . .	Byte	 02B5	  data	
+
+	   0 Warnings
+	   0 Errors
