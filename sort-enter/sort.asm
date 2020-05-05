@@ -6,7 +6,7 @@ endm
 
 DATAS SEGMENT
 	buf db 10,?,10 dup(0)
-    numbers db 10 dup(?)		; changable
+    numbers dw 10 dup(?)		; changable
     wrong db 'Your Input is not legal$'
     flag db 0
 DATAS ENDS
@@ -32,8 +32,8 @@ inL:
 	push si
 	call ascToNum
 	pop si
-	mov numbers[si],al
-	inc si				; db, +1
+	mov numbers[si],ax
+	add si,2			; db, +2
 	enterline
     pop cx
 loop inL
@@ -45,19 +45,19 @@ csi:
 bubble:
 	xor ax,ax
 	xor bx,bx
-	mov al,numbers[si]
-	mov bl,numbers[si+1]
-	cmp al,bl
+	mov ax,numbers[si]
+	mov bx,numbers[si+2]
+	cmp ax,bx
 	
 	; compare ax bx
 	; if ax < bx continue
 	; else swap(ax, bx)
 	jb sorted
-	mov numbers[si],bl
-	mov numbers[si+1],al
+	mov numbers[si],bx
+	mov numbers[si+2],ax
 	
 sorted:
-	inc si
+	add si,2
 	inc di
 	cmp di,cx
 	
@@ -65,17 +65,18 @@ sorted:
 	jb bubble
 	loop csi
 	
+; output
 	mov cx,10
 output:
 	xor si,si
 
 os:
 	xor ax,ax
-	mov al,numbers[si]
+	mov ax,numbers[si]
 	push cx
 	call numToAsc
 	pop cx
-	inc si
+	add si,2
 	loop os
     
     
@@ -199,5 +200,6 @@ space:					;输出一个空格
 numToAsc endp    
 CODES ENDS
     END START
+
 
 
