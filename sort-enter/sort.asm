@@ -52,7 +52,7 @@ bubble:
 	; compare ax bx
 	; if ax < bx continue
 	; else swap(ax, bx)
-	jl sorted
+	jb sorted
 	mov numbers[si],bl
 	mov numbers[si+1],al
 	
@@ -199,4 +199,5 @@ space:					;输出一个空格
 numToAsc endp    
 CODES ENDS
     END START
+
 
