@@ -1,0 +1,127 @@
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 11:02:11
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+ 0000  000A [			    bin dw 10 dup(?)    ;存放二进制结果
+        0000
+       ]
+ 0014  0005 [			    buf db 5 dup(?)      ;存放十进制数 各个数位上的数值 如100，存放为 1,0,0
+        00
+       ]
+ 0019 70 6C 65 61 73 65		    msg1 db 'please input a hex number',13,10,'$'
+       20 69 6E 70 75 74
+       20 61 20 68 65 78
+       20 6E 75 6D 62 65
+       72 0D 0A 24
+ 0035 74 68 65 20 64 65		    msg2 db 'the dec number:',13,10,'$'
+       63 20 6E 75 6D 62
+       65 72 3A 0D 0A 24
+ 0047 0D 0A 24			    crlf db 13,10,'$'    ;回车换行
+ 004A				DATAS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    
+ 0005  BB 0000			       mov bx,0        ;初始化bx
+				       
+ 0008  8D 16 0019 R		       LEA dx,msg1        ;输出提示字符串
+ 000C  B4 09			       mov ah,9
+ 000E  CD 21			       int 21h
+				       
+ 0010				 input:
+ 0010  B4 01			       mov ah,1        ;输入一个字符
+ 0012  CD 21			       int 21h
+				       
+ 0014  2C 30			       sub al,30h        ;把al中的ascii码转换成数值
+ 0016  7C 1C			       jl init
+				   
+ 0018  3C 0A			       cmp al,10        ;输入的数在0-9之间跳转
+ 001A  7C 0A			       jl toBin
+				       
+ 001C  2C 27			       sub al,27h        ;再转换为a-f
+ 001E  3C 0A			       cmp al,0ah        ;输入的字符比a小
+ 0020  7C 12			       jl init            ;结束输入
+ 0022  3C 10			       cmp al,10h        ;输入的字符比f大
+ 0024  7D 0E			       jge init        ;结束输入
+				       
+ 0026				  toBin:            ;转换为二进制，把输入组合成意义上的数值
+ 0026  B1 04			       mov cl,4        
+ 0028  D3 E3			       shl bx,cl        ;bx左移4位
+ 002A  B4 00			       mov ah,0        
+ 002C  03 D8			       add bx,ax        ;把输入后并从ascii码转换来的值与bx相加
+ 002E  89 1E 0000 R		       mov bin,bx        ;转换成二进制数后存到内存bin
+ 0032  EB DC			       jmp input        ;继续输入
+				       
+ 0034				  init:                ;初始化,准备转换
+ 0034  A1 0000 R		      mov ax,bin        
+ 0037  BB 000A			      mov bx,10        
+ 003A  BE 0004			      mov si,4        ;循环四次，最大到万位
+				      
+ 003D				  toDec:            ;转为各个数位上的数值，如100转换为1,0,0 百位为1...
+ 003D  BA 0000			      mov dx,0        
+ 0040  F7 F3			      div bx            ;除10法得到各个位上的数值
+ 0042  88 94 0014 R		      mov [buf+si],dl    ;余数为该位上的值，第一次循环为个位，第二次为十位...；存到内存中
+ 0046  4E			      dec si            
+ 0047  83 F8 00			      cmp ax,0        ;商是否为0，为0算法结束
+ 004A  77 F1			      ja toDec
+				  
+
+ 004C  8D 16 0047 R		      lea dx,crlf            ;显示提示
+ 0050  B4 09			      mov ah,9
+ 0052  CD 21			      int 21h
+ 0054  8D 16 0035 R		      lea dx,msg2
+ 0058  B4 09			      mov ah,9
+ 005A  CD 21			      int 21h
+				      
+ 005C				  output:                ;输出内存中存放的各个数位上的数值
+ 005C  46			      inc si
+ 005D  8A 94 0014 R		      mov dl,[buf+si]
+ 0061  80 C2 30			      add dl,30h            ;转为ascii
+ 0064  B4 02			      mov ah,2
+ 0066  CD 21			      int 21h
+ 0068  83 FE 04			      cmp si,4
+ 006B  72 EF			      jb output
+				      
+				   
+ 006D  B4 01			    mov ah,1
+ 006F  CD 21			    int 21h
+ 0071  B4 4C			    MOV AH,4CH
+ 0073  CD 21			    INT 21H
+ 0075				CODES ENDS
+				    END START
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 11:02:11
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 0075	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 004A	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+bin  . . . . . . . . . . . . . .	Word	 0000	  DATAS	
+buf  . . . . . . . . . . . . . .	Byte	 0014	  DATAS	
+crlf . . . . . . . . . . . . . .	Byte	 0047	  DATAS	
+init . . . . . . . . . . . . . .	L Near	 0034	  CODES	
+input  . . . . . . . . . . . . .	L Near	 0010	  CODES	
+msg1 . . . . . . . . . . . . . .	Byte	 0019	  DATAS	
+msg2 . . . . . . . . . . . . . .	Byte	 0035	  DATAS	
+output . . . . . . . . . . . . .	L Near	 005C	  CODES	
+toBin  . . . . . . . . . . . . .	L Near	 0026	  CODES	
+toDec  . . . . . . . . . . . . .	L Near	 003D	  CODES	
+
+	   0 Warnings
+	   0 Errors

@@ -1,0 +1,323 @@
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 10:54:46
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+ 0000 0A 0D 70 6C 65 61			str2	db	10,13,'please input the binary string:',10,13, '$'
+       73 65 20 69 6E 70
+       75 74 20 74 68 65
+       20 62 69 6E 61 72
+       79 20 73 74 72 69
+       6E 67 3A 0A 0D 24
+ 0024 74 68 65 20 68 65			str21	db	'the hexadecimal string is:',10,13, '$'
+       78 61 64 65 63 69
+       6D 61 6C 20 73 74
+       72 69 6E 67 20 69
+       73 3A 0A 0D 24
+ 0041 77 72 6F 6E 67 20			err db 'wrong input$'
+       69 6E 70 75 74 24
+ 004D				DATAS ENDS
+
+ 0000				STACKS SEGMENT para stack
+ 0000  0100 [			    dw 100h dup(0)
+        0000
+       ]
+ 0200				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+				charin macro			
+						mov ah,01h				
+						int 21h			
+				endm
+
+				numin macro
+						charin
+						sub al,48
+				endm
+
+				charout	macro outchar			
+						push ax
+						push dx
+						mov dl, outchar
+						mov ah, 02h				
+						int 21h					
+						pop dx
+						pop ax
+				endm
+				numout	macro outnum
+						push ax
+						push dx
+						mov dl, outnum
+						add dl, 48				
+						mov ah, 02h				
+						int 21h					
+						pop dx
+						pop ax
+				endm
+
+				strout	macro stringout			
+						push ax
+						push dx
+						lea dx, stringout		
+						mov ah, 9				
+						int 21h					
+						pop	dx
+						pop	ax
+				endm
+
+				endl  macro					
+						push ax
+						push bx
+						push cx
+						push dx
+						
+						mov dl, 0ah				
+						mov ah, 2
+						int 21h					
+						mov dl, 0dh				
+						int 21h					
+						
+						pop dx
+						pop cx
+						pop bx
+						pop ax
+				endm
+
+
+				outax	macro	basenum			
+						push ax
+						push bx
+						push cx
+						push dx
+						
+						mov bx, basenum			
+						call outaxp				
+						
+						pop dx
+						pop cx
+						pop bx
+						pop ax
+				endm
+ 0000				outaxp	proc
+ 0000  BA 0000					mov dx,0				
+ 0003  B9 0000					mov cx,0			
+ 0006				outaxp_circle:
+ 0006  83 F8 00					cmp ax,0				
+ 0009  74 09					je outaxp_next			
+ 000B  F7 F3					div bx					
+ 000D  52					push dx					
+ 000E  BA 0000					mov dx,0				
+ 0011  41					inc cx					
+ 0012  EB F2					jmp outaxp_circle	
+ 0014				outaxp_next:					
+ 0014  58					pop ax
+ 0015  3C 0A					cmp al,10						
+ 0017  72 0E				jb 	nout
+ 0019  04 37					add al,55				
+						charout al
+ 001B  50		     1			push ax
+ 001C  52		     1			push dx
+ 001D  8A D0		     1			mov dl, al
+ 001F  B4 02		     1			mov ah, 02h				
+ 0021  CD 21		     1			int 21h					
+ 0023  5A		     1			pop dx
+ 0024  58		     1			pop ax
+ 0025  EB 0D					jmp cout
+						
+ 0027				nout:	
+					numout al
+ 0027  50		     1			push ax
+ 0028  52		     1			push dx
+ 0029  8A D0		     1			mov dl, al
+ 002B  80 C2 30		     1			add dl, 48				
+ 002E  B4 02		     1			mov ah, 02h				
+ 0030  CD 21		     1			int 21h					
+ 0032  5A		     1			pop dx
+ 0033  58		     1			pop ax
+ 0034				cout:	
+ 0034  E2 DE				loop outaxp_next
+ 0036  C3				ret	
+ 0037				outaxp	endp
+
+
+				inax macro basenum			
+						push bx
+						push cx
+						push dx
+						
+						mov cx, basenum			
+						call inaxp						
+						pop dx
+						pop cx
+						pop bx
+				endm
+ 0037				inaxp	proc
+ 0037  B8 0000					mov	ax,	0
+ 003A				inaxp0:	
+ 003A  50					push ax
+ 003B				inaxp1:	
+						charin					
+ 003B  B4 01		     1			mov ah,01h				
+ 003D  CD 21		     1			int 21h			
+ 003F  3C 0D					cmp al, 13
+ 0041  74 34					je	inaxe				
+ 0043  3C 30					cmp al, '0'
+ 0045  72 F4					jb	inaxp1			
+ 0047  3C 39					cmp al, '9'	
+ 0049  77 04					ja	inaxnext1			
+ 004B  2C 30					sub	al, 48				
+ 004D  EB 18					jmp inaxnum				
+ 004F				inaxnext1:	
+ 004F  3C 41					cmp al, 'A'
+ 0051  72 E8					jb	inaxp1				
+ 0053  3C 46					cmp al, 'F'
+ 0055  77 04					ja	inaxnext2			
+ 0057  2C 37					sub	al, 55				
+ 0059  EB 0C					jmp inaxnum
+ 005B				inaxnext2:
+ 005B  3C 61					cmp al, 'a'
+ 005D  72 DC					jb	inaxp1				
+ 005F  3C 7A					cmp al, 'z'
+ 0061  77 D8					ja	inaxp1				
+ 0063  2C 57					sub	al, 87					
+ 0065  EB 00					jmp inaxnum
+ 0067				inaxnum:
+ 0067  B7 00					mov bh, 0				
+ 0069  8A D8					mov bl, al
+ 006B  58					pop	ax
+						
+ 006C  83 F8 00					cmp ax, 0						
+ 006F  74 02					je	inaxadd
+ 0071  F7 E1					mul cx					
+ 0073				inaxadd:
+ 0073  03 C3					add ax, bx
+ 0075  EB C3					jmp inaxp0	
+ 0077				inaxe:	
+ 0077  58				pop	ax						
+ 0078  C3				ret	
+ 0079				inaxp endp
+ 0079				START:
+ 0079  B8 ---- R		    MOV AX,DATAS
+ 007C  8E D8			    MOV DS,AX
+				    ;此处输入代码段代码
+				    
+				;bin_hex:	
+					strout str2
+ 007E  50		     1			push ax
+ 007F  52		     1			push dx
+ 0080  8D 16 0000 R	     1			lea dx, str2		
+ 0084  B4 09		     1			mov ah, 9				
+ 0086  CD 21		     1			int 21h					
+ 0088  5A		     1			pop	dx
+ 0089  58		     1			pop	ax
+					inax 2				
+ 008A  53		     1			push bx
+ 008B  51		     1			push cx
+ 008C  52		     1			push dx
+ 008D  B9 0002		     1			mov cx, 2			
+ 0090  E8 FFA4		     1			call inaxp						
+ 0093  5A		     1			pop dx
+ 0094  59		     1			pop cx
+ 0095  5B		     1			pop bx
+					endl
+ 0096  50		     1			push ax
+ 0097  53		     1			push bx
+ 0098  51		     1			push cx
+ 0099  52		     1			push dx
+ 009A  B2 0A		     1			mov dl, 0ah				
+ 009C  B4 02		     1			mov ah, 2
+ 009E  CD 21		     1			int 21h					
+ 00A0  B2 0D		     1			mov dl, 0dh				
+ 00A2  CD 21		     1			int 21h					
+ 00A4  5A		     1			pop dx
+ 00A5  59		     1			pop cx
+ 00A6  5B		     1			pop bx
+ 00A7  58		     1			pop ax
+					strout str21
+ 00A8  50		     1			push ax
+ 00A9  52		     1			push dx
+ 00AA  8D 16 0024 R	     1			lea dx, str21		
+ 00AE  B4 09		     1			mov ah, 9				
+ 00B0  CD 21		     1			int 21h					
+ 00B2  5A		     1			pop	dx
+ 00B3  58		     1			pop	ax
+					outax 16					
+ 00B4  50		     1			push ax
+ 00B5  53		     1			push bx
+ 00B6  51		     1			push cx
+ 00B7  52		     1			push dx
+ 00B8  BB 0010		     1			mov bx, 16			
+ 00BB  E8 FF42		     1			call outaxp				
+ 00BE  5A		     1			pop dx
+ 00BF  59		     1			pop cx
+ 00C0  5B		     1			pop bx
+ 00C1  58		     1			pop ax
+ 00C2  B4 4C			    MOV AH,4CH
+ 00C4  CD 21			    INT 21H
+ 00C6				CODES ENDS
+				    END START
+
+
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    05/06/20 10:54:46
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+charin . . . . . . . . . . . . .	Proc
+charout  . . . . . . . . . . . .	Proc
+endl . . . . . . . . . . . . . .	Proc
+inax . . . . . . . . . . . . . .	Proc
+numin  . . . . . . . . . . . . .	Proc
+numout . . . . . . . . . . . . .	Proc
+outax  . . . . . . . . . . . . .	Proc
+strout . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 00C6	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 004D	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0200	  Para	  Stack	  
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+inaxp  . . . . . . . . . . . . .	P Near	 0037	  CODES	Length= 0042 Public
+  inaxp0 . . . . . . . . . . . .	L Near	 003A	  CODES	
+  inaxp1 . . . . . . . . . . . .	L Near	 003B	  CODES	
+  inaxnext1  . . . . . . . . . .	L Near	 004F	  CODES	
+  inaxnext2  . . . . . . . . . .	L Near	 005B	  CODES	
+  inaxnum  . . . . . . . . . . .	L Near	 0067	  CODES	
+  inaxadd  . . . . . . . . . . .	L Near	 0073	  CODES	
+  inaxe  . . . . . . . . . . . .	L Near	 0077	  CODES	
+outaxp . . . . . . . . . . . . .	P Near	 0000	  CODES	Length= 0037 Public
+  outaxp_circle  . . . . . . . .	L Near	 0006	  CODES	
+  outaxp_next  . . . . . . . . .	L Near	 0014	  CODES	
+  nout . . . . . . . . . . . . .	L Near	 0027	  CODES	
+  cout . . . . . . . . . . . . .	L Near	 0034	  CODES	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0079	  CODES	
+err  . . . . . . . . . . . . . .	Byte	 0041	  DATAS	
+str21  . . . . . . . . . . . . .	Byte	 0024	  DATAS	
+str2 . . . . . . . . . . . . . .	Byte	 0000	  DATAS	
+
+	   0 Warnings
+	   0 Errors
